@@ -11,7 +11,8 @@ const dataset = [
 ]
 
 const config = {
-  line_smooth: true
+  line_smooth: true,
+  label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP']
 }
 
 const sparkline = Sparkline({

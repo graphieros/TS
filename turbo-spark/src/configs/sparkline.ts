@@ -33,6 +33,14 @@ export const config_sparkline = {
     label_axis_y_offset_y: 0,
     label_prefix: '',
     label_suffix: '',
+    label_axis_x_values: [],
+    label_axis_x_bold: false,
+    label_axis_x_color: '#1A1A1A',
+    label_axis_x_font_size: 12,
+    label_axis_x_rounding: 1,
+    label_axis_x_show: true,
+    label_axis_x_offset_x: 0,
+    label_axis_x_offset_y: 0,
 
     // LINE SETTINGS
     line_smooth: false,

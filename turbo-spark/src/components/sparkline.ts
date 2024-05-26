@@ -129,6 +129,24 @@ export default function Sparkline({
             }
         }
 
+        if (finalConfig.label_axis_x_show && finalConfig.label_axis_x_values.length) {
+            for (let i = 0; i < finalDataset.maxSeriesLength; i += 1) {
+                const label = createShape({
+                    shape: Shape.TEXT,
+                    config: {
+                        x: drawingArea.left + (slot * i) + (slot / 2) + finalConfig.label_axis_x_offset_x,
+                        y: drawingArea.bottom + (finalConfig.label_axis_x_font_size * 1.5) + finalConfig.label_axis_x_offset_y,
+                        fill: finalConfig.label_axis_x_color,
+                        'font-size': finalConfig.label_axis_x_font_size,
+                        'font-weight': finalConfig.label_axis_x_bold ? 'bold' : 'normal',
+                        'text-anchor': 'middle'
+                    },
+                    parent: SVG
+                })
+                label.innerHTML = finalConfig.label_axis_x_values[i]
+            }
+        }
+
         if (finalConfig.label_axis_y_show) {
             scale.ticks.forEach((tick: number, i: number) => {
                 const y = drawingArea.bottom - (i * (drawingArea.height / (scale.ticks.length - 1)));
