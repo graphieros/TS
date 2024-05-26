@@ -33,6 +33,7 @@ export default function Sparkline({
         SVG.setAttribute('viewBox', viewBox)
         SVG.style.backgroundColor = finalConfig.chart_background;
         SVG.style.width = "100%";
+        SVG.classList.add('turbo-spark__sparkline')
 
         // DRAWING AREA
         const drawingArea = {
