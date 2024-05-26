@@ -1,7 +1,7 @@
 import { LineConfig, LineDataset, Shape } from "../../types/main";
 import { config_sparkline } from "../configs/sparkline";
 import { CONSTANT } from "../utils/constants";
-import { calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, dataLabel, palette, useNestedProp } from "../utils/main";
+import { calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
 
 export default function Sparkline({
@@ -15,10 +15,16 @@ export default function Sparkline({
 }) {
 
     const SVG = document.createElementNS(CONSTANT.XMLNS, "svg");
+    const SVG_ELEMENTS = {
+        plots: [] as any,
+        lines: [] as any
+    }
     let init = true;
     
     function resetChart() {
         SVG.innerHTML = "";
+        SVG_ELEMENTS.plots = [];
+        SVG_ELEMENTS.lines = [];
         makeChart();
     }
 
@@ -26,6 +32,23 @@ export default function Sparkline({
         defaultConfig: config_sparkline,
         userConfig: config ?? {}
     })
+
+    function hoverDatapoint(index: number) {
+        SVG_ELEMENTS.plots.forEach((p: any) => {
+
+            if(index === p.plot.absoluteIndex) {
+                p.element.setAttribute('r', finalConfig.plot_focus_radius)
+            } else {
+                p.element.setAttribute('r', finalConfig.plot_radius)
+            }
+        })
+    }
+
+    function resetDatapoints() {
+        SVG_ELEMENTS.plots.forEach((p: any) => {
+            p.element.setAttribute('r', finalConfig.plot_radius)
+        })
+    }
     
     function makeChart() {
 
@@ -58,12 +81,13 @@ export default function Sparkline({
                 const plots = ds.VALUES.map((v: number, i: number) => {
                     return {
                         x: drawingArea.left + (i * slot) + (slot / 2),
-                        y: drawingArea.bottom - (((v + Math.abs(scale.min)) / (scale.max + Math.abs(scale.min))) * drawingArea.height)
+                        y: drawingArea.bottom - (((v + Math.abs(scale.min)) / (scale.max + Math.abs(scale.min))) * drawingArea.height),
+                        absoluteIndex: i
                     }
                 });
-
                 return {
                     ...ds,
+                    id: createUid(),
                     plots,
                     path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map((p:any) => `${p.x},${p.y} `).toString().trim(),
                     color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
@@ -206,7 +230,7 @@ export default function Sparkline({
             });
 
             ds.plots.forEach((plot: any) => {
-                createShape({
+                const p = createShape({
                     shape: Shape.CIRCLE,
                     config: {
                         cx: plot.x,
@@ -218,10 +242,31 @@ export default function Sparkline({
                     },
                     parent: SVG
                 })
+                SVG_ELEMENTS.plots.push({ element: p, plot })
             })
         })
 
         // PLOTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PLOTS //
+
+
+        // MOUSE TRAPS
+        
+        for (let i = 0; i < finalDataset.maxSeriesLength; i += 1) {
+            const trap = createShape({
+                shape: Shape.RECT,
+                config: {
+                    x: drawingArea.left + (i * slot),
+                    y: drawingArea.top,
+                    width: slot,
+                    height: drawingArea.height,
+                    fill: 'transparent'
+                },
+            })
+
+            SVG.appendChild(trap)
+            trap.addEventListener('mouseenter', () => hoverDatapoint(i))
+            trap.addEventListener('mouseout', resetDatapoints)
+        }
 
         if(init) {
             container.appendChild(SVG);

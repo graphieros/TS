@@ -8,7 +8,7 @@ export function createShape({
 }: {
     shape: Shape;
     config: ShapeConfig;
-    parent: SVGSVGElement | SVGElement | null
+    parent?: SVGSVGElement | SVGElement | null
 }) {
 
     function isShape(value: string): value is Shape {
@@ -458,4 +458,13 @@ export function dataLabel({ p = '', v, s = '', r = 0, space = false } : { p: str
     const num = Number(Number(v).toFixed(r).toLocaleString())
     const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
     return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
+}
+
+export function createUid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+        .replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0,
+                v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
 }

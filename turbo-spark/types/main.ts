@@ -46,6 +46,8 @@ export type ShapeConfig = {
     'text-anchor'?: 'end' | 'start' | 'middle'
     'font-weight'?: 'bold' | 'normal'
     'font-size'?: number | string
+    height?: number | string
+    width?: number | string
     x1?: number
     x2?: number
     x?: number

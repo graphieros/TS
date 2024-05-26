@@ -49,4 +49,5 @@ export const config_sparkline = {
     plot_radius: 3,
     plot_stroke: "#FFFFFF",
     plot_stroke_width: 1,
+    plot_focus_radius: 5
 }
