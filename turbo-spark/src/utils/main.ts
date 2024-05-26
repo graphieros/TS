@@ -34,6 +34,7 @@ export function createShape({
     if (parent) {
         parent.appendChild(svg_shape)
     }
+    return svg_shape
 }
 
 export function deepEqual(obj1: any, obj2: any) {
@@ -402,4 +403,59 @@ export function createSmoothPath(points: any) {
         , '');
 
     return d;
+}
+
+export function niceNum(range: number, round: boolean) {
+    const exponent = Math.floor(Math.log10(range));
+    const fraction = range / Math.pow(10, exponent);
+    let niceFraction;
+
+    if (round) {
+        if (fraction < 1.5) {
+            niceFraction = 1;
+        } else if (fraction < 3) {
+            niceFraction = 2;
+        } else if (fraction < 7) {
+            niceFraction = 5;
+        } else {
+            niceFraction = 10;
+        }
+    } else {
+        if (fraction <= 1) {
+            niceFraction = 1;
+        } else if (fraction <= 2) {
+            niceFraction = 2;
+        } else if (fraction <= 5) {
+            niceFraction = 5;
+        } else {
+            niceFraction = 10;
+        }
+    }
+
+    return niceFraction * Math.pow(10, exponent);
+}
+
+export function calculateNiceScale(minValue: number, maxValue:number, maxTicks:number, rough = false) {
+    const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
+    const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
+    const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
+    const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
+
+    const ticks = [];
+    for (let tick = niceMin; tick <= niceMax; tick += tickSpacing) {
+        ticks.push(tick);
+    }
+
+    return {
+        min: niceMin,
+        max: niceMax,
+        tickSize: tickSpacing,
+        ticks
+    };
+}
+
+export function dataLabel({ p = '', v, s = '', r = 0, space = false } : { p: string, v: any, s: string, r: number, space?: boolean}) : string {
+    const num = Number(Number(v).toFixed(r).toLocaleString())
+    const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
+    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
 }

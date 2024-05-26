@@ -42,7 +42,10 @@ export type ShapeConfig = {
     'stroke-linecap'?: 'round' | 'square' | 'butt'
     'stroke-linejoin'?: 'round' | 'miter'
     'stroke-width'?: string | number
+    'stroke-dasharray'?: string | number
     'text-anchor'?: 'end' | 'start' | 'middle'
+    'font-weight'?: 'bold' | 'normal'
+    'font-size'?: number | string
     x1?: number
     x2?: number
     x?: number

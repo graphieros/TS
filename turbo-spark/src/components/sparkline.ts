@@ -1,7 +1,7 @@
 import { LineConfig, LineDataset, Shape } from "../../types/main";
 import { config_sparkline } from "../configs/sparkline";
 import { CONSTANT } from "../utils/constants";
-import { convertColorToHex, createProxyObservable, createShape, createSmoothPath, palette, useNestedProp } from "../utils/main";
+import { calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
 
 export default function Sparkline({
@@ -31,7 +31,8 @@ export default function Sparkline({
 
         const viewBox = `0 0 ${finalConfig.chart_width} ${finalConfig.chart_height}`
         SVG.setAttribute('viewBox', viewBox)
-        SVG.style.backgroundColor = finalConfig.color_background;
+        SVG.style.backgroundColor = finalConfig.chart_background;
+        SVG.style.width = "100%";
 
         // DRAWING AREA
         const drawingArea = {
@@ -45,6 +46,7 @@ export default function Sparkline({
 
         const finalDataset = detector.detectChart(dataset)
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
+        const scale = calculateNiceScale(finalDataset.min < 0 ? finalDataset.min : 0, finalDataset.max, finalConfig.grid_axis_y_scale_ticks); // CONFIG
 
         let mutableDataset:any = [];
 
@@ -55,7 +57,7 @@ export default function Sparkline({
                 const plots = ds.VALUES.map((v: number, i: number) => {
                     return {
                         x: drawingArea.left + (i * slot) + (slot / 2),
-                        y: drawingArea.bottom - (((v + Math.abs(finalDataset.min)) / (finalDataset.max + Math.abs(finalDataset.min))) * drawingArea.height)
+                        y: drawingArea.bottom - (((v + Math.abs(scale.min)) / (scale.max + Math.abs(scale.min))) * drawingArea.height)
                     }
                 });
 
@@ -70,7 +72,11 @@ export default function Sparkline({
 
         console.log({ mutableDataset, slot })
 
-        // GRID
+        const zeroPosition = drawingArea.bottom - ((Math.abs(scale.min) / (scale.max + Math.abs(scale.min))) * drawingArea.height);
+
+        console.log({scale})
+
+        // GRID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GRID //
 
         if (finalConfig.grid_axis_y_show) {
             createShape({
@@ -88,7 +94,85 @@ export default function Sparkline({
             })
         }
 
-        // PLOTS
+        if (finalConfig.grid_axis_x_show) {
+            createShape({
+                shape: Shape.LINE,
+                config: {
+                    x1: drawingArea.left,
+                    x2: drawingArea.right,
+                    y1: zeroPosition,
+                    y2: zeroPosition,
+                    stroke: finalConfig.grid_axis_stroke,
+                    'stroke-width': finalConfig.grid_axis_stroke_width,
+                    'stroke-linecap': 'round'
+                },
+                parent: SVG
+            })
+        }
+
+        if (finalConfig.grid_lines_y_show) {
+            for (let i = 1; i < finalDataset.maxSeriesLength + 1; i += 1) {
+                createShape({
+                    shape: Shape.LINE,
+                    config: {
+                        x1: drawingArea.left + (slot * i),
+                        x2: drawingArea.left + (slot * i),
+                        y1: drawingArea.top,
+                        y2: drawingArea.bottom,
+                        stroke: finalConfig.grid_lines_y_stroke,
+                        'stroke-width': finalConfig.grid_lines_y_stroke_width,
+                        'stroke-linecap': 'round',
+                        'stroke-dasharray': finalConfig.grid_lines_y_stroke_dasharray
+                    },
+                    parent: SVG
+                })
+            }
+        }
+
+        if (finalConfig.label_axis_y_show) {
+            scale.ticks.forEach((tick: number, i: number) => {
+                const y = drawingArea.bottom - (i * (drawingArea.height / (scale.ticks.length - 1)));
+                const label = createShape({
+                    shape: Shape.TEXT,
+                    config: {
+                        x: drawingArea.left + finalConfig.label_axis_y_offset_x - 6,
+                        y,
+                        'font-size': finalConfig.label_axis_y_font_size,
+                        'font-weight': finalConfig.label_axis_y_bold ? 'bold' : 'normal',
+                        fill: finalConfig.label_axis_y_color,
+                        'text-anchor': 'end'
+                    },
+                    parent: SVG
+                })
+                label.innerHTML = dataLabel({
+                    p: finalConfig.label_prefix,
+                    v: tick,
+                    s: finalConfig.label_suffix,
+                    r: finalConfig.label_axis_y_rounding
+                });
+
+                if (finalConfig.grid_lines_x_show) {
+                    createShape({
+                        shape: Shape.LINE,
+                        config: {
+                            x1: drawingArea.left,
+                            x2: drawingArea.right,
+                            y1: y,
+                            y2: y,
+                            stroke: finalConfig.grid_lines_x_stroke,
+                            'stroke-width': finalConfig.grid_lines_x_stroke_width,
+                            'stroke-linecap': 'round',
+                            'stroke-dasharray': finalConfig.grid_lines_x_stroke_dasharray
+                        },
+                        parent: SVG
+                    })
+                }
+            })
+        }
+
+        // GRID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< GRID //
+
+        // PLOTS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PLOTS //
 
         mutableDataset.forEach((ds: any) => {
             createShape({
@@ -108,13 +192,17 @@ export default function Sparkline({
                     config: {
                         cx: plot.x,
                         cy: plot.y,
-                        r: 3,
-                        fill: ds.color
+                        r: finalConfig.plot_radius,
+                        fill: ds.color,
+                        stroke: finalConfig.plot_stroke,
+                        'stroke-width': finalConfig.plot_stroke_width
                     },
                     parent: SVG
                 })
             })
         })
+
+        // PLOTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PLOTS //
 
         if(init) {
             container.appendChild(SVG);

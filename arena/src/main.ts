@@ -5,7 +5,7 @@ const app = document.getElementById('app');
 
 // const dataset = [1, 2, 3, 4]
 const dataset = [
-  { name: "Serie 1", values: [12, 3, 6, 8, 3, 14, 12, 16]},
+  { name: "Serie 1", values: [12, 3, 6, -8, 3, 14, 12, 16]},
   { name: "Serie 2", values: [3, 7, 2, 1, 6, 9, 13, 21]},
   { name: "Serie 3", values: [21, 32, 43, 23, 21, 22, 11, 16]},
 ]
