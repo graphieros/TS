@@ -1,0 +1,27 @@
+{
+  "name": "turbo-spark",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/turbo-spark.cjs",
+  "module": "./dist/turbo-spark.js",
+  "exports": {
+    ".": {
+      "import": "./dist/turbo-spark.js",
+      "require": "./dist/turbo-spark.cjs",
+      "types": "./dist/types/turbo-spark.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build --mode production && node copy-types.cjs",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0"
+  }
+}
