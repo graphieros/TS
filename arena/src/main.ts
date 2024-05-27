@@ -5,10 +5,12 @@ const app = document.getElementById('app');
 
 // const dataset = [1, 2, 3, 4]
 const dataset = [
-  { name: "Serie 1", values: [12, 3, 6, -8, 3, 14, 12, 16]},
-  { name: "Serie 2", values: [3, 7, 2, 1, 6, 9, 13, 21]},
-  { name: "Serie 3", values: [21, 32, 43, 23, 21, 22, 11, 16]},
+  { name: "Serie 1", values: [12, 3, 6, -8, 3, 14, 12, 16] },
+  { name: "Serie 2", values: [3, 7, 2, 1, 6, 9, 13, 21] },
+  { name: "Serie 3", values: [21, 32, 43, 23, 21, 22, 11, 16] },
 ]
+
+const datasetSimple = [10, 20, 12, 34, 13, 22, 6, 13, 25];
 
 const config = {
   line_smooth: true,
@@ -19,10 +21,16 @@ const sparkline = Sparkline({
   container: app,
   dataset,
   config
+});
+
+Sparkline({
+  container: app,
+  dataset: datasetSimple,
+  config
 })
 
 function incrementDataset() {
-  sparkline.dataset.push({ name: 'Serie 3', values: [1, 2, 3, 4, 5, 6]})
+  sparkline.dataset.push({ name: 'Serie 3', values: [1, 2, 3, 4, 5, 6] })
 }
 
 function changeConfig() {

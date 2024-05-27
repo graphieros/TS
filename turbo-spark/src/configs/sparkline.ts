@@ -1,4 +1,6 @@
-export const config_sparkline = {
+import { LineConfig } from "../../types/main";
+
+export const config_sparkline: LineConfig = {
     // CHART SETTINGS
     chart_height: 309,
     chart_width: 500,
@@ -22,7 +24,7 @@ export const config_sparkline = {
     grid_lines_x_stroke: "#CCCCCC",
     grid_lines_x_stroke_width: 0.5,
     grid_lines_x_stroke_dasharray: 0,
-    
+
     // LABEL SETTINGS
     label_axis_y_bold: false,
     label_axis_y_color: '#1A1A1A',
@@ -49,5 +51,11 @@ export const config_sparkline = {
     plot_radius: 3,
     plot_stroke: "#FFFFFF",
     plot_stroke_width: 1,
-    plot_focus_radius: 5
+    plot_focus_radius: 5,
+
+    // SELECTOR
+    selector_show: true,
+    selector_stroke: "#CCCCCC",
+    selector_stroke_width: 1,
+    selector_stroke_dasharray: 2
 }
