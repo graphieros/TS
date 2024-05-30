@@ -1,4 +1,4 @@
-import { Shape, ShapeConfig } from "../../types/main";
+import { Coordinate, Scale, Shape, ShapeConfig, UnknownObject } from "../../types/main";
 import { CONSTANT } from "./constants";
 
 export function createShape({
@@ -27,7 +27,7 @@ export function createShape({
 
     Object.keys(config).forEach(key => {
         if (isShapeConfigKey(key)) {
-            svg_shape.setAttribute(key, config[key] as any);
+            svg_shape.setAttribute(key, config[key] as string);
         }
     });
 
@@ -37,7 +37,7 @@ export function createShape({
     return svg_shape
 }
 
-export function deepEqual(obj1: any, obj2: any) {
+export function deepEqual(obj1: UnknownObject, obj2: UnknownObject) {
     if (obj1 === obj2) return true;
 
     if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
@@ -60,7 +60,7 @@ export function deepEqual(obj1: any, obj2: any) {
     return true;
 }
 
-export function createProxyObservable(initialValue: any, callback: (arg0: any) => void) {
+export function createProxyObservable(initialValue: object, callback: (arg0: any) => void) {
     let value = initialValue;
 
     const handler: any = {
@@ -77,8 +77,8 @@ export function createProxyObservable(initialValue: any, callback: (arg0: any) =
     return new Proxy(value, handler);
 }
 
-export function useNestedProp({ defaultConfig, userConfig } :{ defaultConfig: any, userConfig: any}) {
-    if(!Object.keys(userConfig || {}).length) {
+export function useNestedProp<T>({ defaultConfig, userConfig }: { defaultConfig: T, userConfig: Partial<T> }) {
+    if (!Object.keys(userConfig || {}).length) {
         return defaultConfig;
     }
     const reconciled = treeShake({
@@ -88,7 +88,7 @@ export function useNestedProp({ defaultConfig, userConfig } :{ defaultConfig: an
     return convertConfigColors(reconciled)
 }
 
-export function treeShake({ defaultConfig, userConfig }: { defaultConfig: any, userConfig: any}) {
+export function treeShake({ defaultConfig, userConfig }: { defaultConfig: any, userConfig: any }) {
     const finalConfig = { ...defaultConfig };
 
     Object.keys(finalConfig).forEach(key => {
@@ -119,15 +119,15 @@ export function isValidUserValue(val: any) {
     return ![null, undefined, NaN, Infinity, -Infinity].includes(val);
 }
 
-export function checkArray({ userConfig, key }: { userConfig: any, key: string}) {
+export function checkArray({ userConfig, key }: { userConfig: UnknownObject, key: string }) {
     return userConfig.hasOwnProperty(key) && Array.isArray(userConfig[key]) && userConfig[key].length >= 0;
 }
 
-export function checkObj({ userConfig, key } : { userConfig: any, key: string}) {
+export function checkObj({ userConfig, key }: { userConfig: UnknownObject, key: string }) {
     return userConfig.hasOwnProperty(key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
 }
 
-export function convertConfigColors(config: any) {
+export function convertConfigColors(config: UnknownObject) {
     for (const key in config) {
         if (typeof config[key] === 'object' && !Array.isArray(config[key]) && config[key] !== null) {
             convertConfigColors(config[key]);
@@ -175,12 +175,12 @@ export function convertColorToHex(color: any) {
     return null;
 }
 
-export function decimalToHex(decimal: any) {
+export function decimalToHex(decimal: string | number) {
     const hex = Number(decimal).toString(16);
     return hex.length === 1 ? "0" + hex : hex;
 }
 
-export function hslToRgb(h:any, s:any, l:any) {
+export function hslToRgb(h: number, s: number, l: number) {
     h /= 360;
     s /= 100;
     l /= 100;
@@ -190,7 +190,7 @@ export function hslToRgb(h:any, s:any, l:any) {
     if (s === 0) {
         r = g = b = l;
     } else {
-        const hueToRgb = (p:any, q:any, t:any) => {
+        const hueToRgb = (p: number, q: number, t: number) => {
             if (t < 0) t += 1;
             if (t > 1) t -= 1;
             if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -213,7 +213,7 @@ export function hslToRgb(h:any, s:any, l:any) {
     ];
 }
 
-export function convertNameColorToHex(colorName: any) {
+export function convertNameColorToHex(colorName: string) {
     const colorMap = {
         ALICEBLUE: "#F0F8FF",
         ANTIQUEWHITE: "#FAEBD7",
@@ -370,9 +370,9 @@ export const palette = [
     "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"
 ];
 
-export function createSmoothPath(points: any) {
+export function createSmoothPath(points: Coordinate[]): string {
     const smoothing = 0.2;
-    function line(pointA: any, pointB: any) {
+    function line(pointA: Coordinate, pointB: Coordinate) {
         const lengthX = pointB.x - pointA.x;
         const lengthY = pointB.y - pointA.y;
         return {
@@ -380,7 +380,8 @@ export function createSmoothPath(points: any) {
             angle: Math.atan2(lengthY, lengthX)
         };
     }
-    function controlPoint(current: any, previous: any, next: any, reverse = false) {
+
+    function controlPoint(current: Coordinate, previous: Coordinate, next: Coordinate, reverse = false): Pick<Coordinate, 'x' | 'y'> {
         const p = previous || current;
         const n = next || current;
         const o = line(p, n);
@@ -392,12 +393,14 @@ export function createSmoothPath(points: any) {
         const y = current.y + Math.sin(angle) * length;
         return { x, y };
     }
-    function bezierCommand(point: any, i: any, a: any) {
+
+    function bezierCommand(point: Coordinate, i: number, a: Coordinate[]) {
         const cps = controlPoint(a[i - 1], a[i - 2], point);
         const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
         return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
     }
-    const d = points.filter((p: any) => !!p).reduce((acc: any, point: any, i: any, a: any) => i === 0
+
+    const d = points.filter((p: Coordinate) => !!p).reduce((acc, point: Coordinate, i: number, a: Coordinate[]) => i === 0
         ? `${point.x},${point.y} `
         : `${acc} ${bezierCommand(point, i, a)} `
         , '');
@@ -405,7 +408,7 @@ export function createSmoothPath(points: any) {
     return d;
 }
 
-export function niceNum(range: number, round: boolean) {
+export function niceNum(range: number, round: boolean): number {
     const exponent = Math.floor(Math.log10(range));
     const fraction = range / Math.pow(10, exponent);
     let niceFraction;
@@ -435,7 +438,7 @@ export function niceNum(range: number, round: boolean) {
     return niceFraction * Math.pow(10, exponent);
 }
 
-export function calculateNiceScale(minValue: number, maxValue:number, maxTicks:number, rough = false) {
+export function calculateNiceScale(minValue: number, maxValue: number, maxTicks: number, rough = false): Scale {
     const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
     const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
     const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
@@ -454,10 +457,10 @@ export function calculateNiceScale(minValue: number, maxValue:number, maxTicks:n
     };
 }
 
-export function dataLabel({ p = '', v, s = '', r = 0, space = false } : { p: string, v: any, s: string, r: number, space?: boolean}) : string {
+export function dataLabel({ p = '', v, s = '', r = 0, space = false }: { p: string, v: number, s: string, r: number, space?: boolean }): string {
     const num = Number(Number(v).toFixed(r).toLocaleString())
     const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
-    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
+    return `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v as any) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
 }
 
 export function createUid() {

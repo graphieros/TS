@@ -1,4 +1,4 @@
-import { LineConfig, LineDataset, Shape } from "../../types/main";
+import { Coordinate, LineConfig, LineDataset, LineMutableDataset, STACK_LINE, Shape } from "../../types/main";
 import { config_sparkline } from "../configs/sparkline";
 import { CONSTANT } from "../utils/constants";
 import { calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
@@ -15,37 +15,35 @@ export default function Sparkline({
 }) {
 
     const SVG = document.createElementNS(CONSTANT.XMLNS, "svg");
-    const SVG_ELEMENTS = {
-        plots: [] as any,
-        lines: [] as any,
-        selectors: [] as any
+    const SVG_ELEMENTS: STACK_LINE = {
+        plots: [],
+        selectors: []
     }
     let init = true;
 
     function resetChart() {
         SVG.innerHTML = "";
         SVG_ELEMENTS.plots = [];
-        SVG_ELEMENTS.lines = [];
         makeChart();
     }
 
-    let finalConfig: LineConfig = useNestedProp({
+    let finalConfig: LineConfig = useNestedProp<LineConfig>({
         defaultConfig: config_sparkline,
         userConfig: config ?? {}
     })
 
     function hoverDatapoint(index: number) {
-        SVG_ELEMENTS.plots.forEach((p: any) => {
+        SVG_ELEMENTS.plots.forEach((p) => {
             if (index === p.plot.absoluteIndex) {
-                p.element.setAttribute('r', finalConfig.plot_focus_radius)
+                p.element.setAttribute('r', String(finalConfig.plot_focus_radius))
             } else {
-                p.element.setAttribute('r', finalConfig.plot_radius)
+                p.element.setAttribute('r', String(finalConfig.plot_radius))
             }
         });
         if (finalConfig.selector_show) {
-            SVG_ELEMENTS.selectors.forEach((selector: any, i: number) => {
+            SVG_ELEMENTS.selectors.forEach((selector, i: number) => {
                 if (index === i) {
-                    selector.setAttribute('stroke', finalConfig.selector_stroke)
+                    selector.setAttribute('stroke', String(finalConfig.selector_stroke))
                 } else {
                     selector.setAttribute('stroke', 'transparent')
                 }
@@ -54,10 +52,10 @@ export default function Sparkline({
     }
 
     function resetDatapoints() {
-        SVG_ELEMENTS.plots.forEach((p: any) => {
-            p.element.setAttribute('r', finalConfig.plot_radius)
+        SVG_ELEMENTS.plots.forEach((p) => {
+            p.element.setAttribute('r', String(finalConfig.plot_radius))
         });
-        SVG_ELEMENTS.selectors.forEach((s: any) => {
+        SVG_ELEMENTS.selectors.forEach((s) => {
             s.setAttribute('stroke', 'transparent')
         })
     }
@@ -84,7 +82,7 @@ export default function Sparkline({
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
         const scale = calculateNiceScale(finalDataset.min < 0 ? finalDataset.min : 0, finalDataset.max, finalConfig.grid_axis_y_scale_ticks!);
 
-        let mutableDataset: any = [];
+        let mutableDataset: LineMutableDataset[] = [];
 
         if (detector.isSimpleArrayOfNumbers(finalDataset.usableDataset)) {
             const plots = finalDataset.usableDataset.map((ds: number, i: number) => {
@@ -97,13 +95,13 @@ export default function Sparkline({
             mutableDataset = [
                 {
                     plots,
-                    path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map((p: { x: number, y: number }) => `${p.x},${p.y} `).toString().trim(),
+                    path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map((p: Coordinate) => `${p.x},${p.y} `).toString().trim(),
                     color: palette[0]
                 }
             ]
         } else {
-            mutableDataset = finalDataset.usableDataset.map((ds: any, k: number) => {
-                const plots = ds.VALUES.map((v: number, i: number) => {
+            mutableDataset = finalDataset.usableDataset.map((ds: { VALUES: number[]; color: string; }, k: number) => {
+                const plots: Coordinate[] = ds.VALUES.map((v: number, i: number) => {
                     return {
                         x: drawingArea.left! + (i * slot) + (slot / 2),
                         y: drawingArea.bottom - (((v + Math.abs(scale.min)) / (scale.max + Math.abs(scale.min))) * drawingArea.height),
@@ -114,7 +112,7 @@ export default function Sparkline({
                     ...ds,
                     id: createUid(),
                     plots,
-                    path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map((p: any) => `${p.x},${p.y} `).toString().trim(),
+                    path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map(p => `${p.x},${p.y} `).toString().trim(),
                     color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
                 }
             })
@@ -123,8 +121,6 @@ export default function Sparkline({
         console.log({ mutableDataset, slot })
 
         const zeroPosition = drawingArea.bottom - ((Math.abs(scale.min) / (scale.max + Math.abs(scale.min))) * drawingArea.height);
-
-        console.log({ scale })
 
         // GRID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GRID //
 
@@ -258,13 +254,13 @@ export default function Sparkline({
                     },
                     parent: SVG
                 });
-                SVG_ELEMENTS.selectors.push(selector)
+                SVG_ELEMENTS.selectors.push(selector as SVGLineElement)
             }
         }
 
         // PLOTS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PLOTS //
 
-        mutableDataset.forEach((ds: any) => {
+        mutableDataset.forEach((ds) => {
             createShape({
                 shape: Shape.PATH,
                 config: {
@@ -276,7 +272,7 @@ export default function Sparkline({
                 parent: SVG
             });
 
-            ds.plots.forEach((plot: any) => {
+            ds.plots.forEach((plot) => {
                 const p = createShape({
                     shape: Shape.CIRCLE,
                     config: {
@@ -289,7 +285,7 @@ export default function Sparkline({
                     },
                     parent: SVG
                 })
-                SVG_ELEMENTS.plots.push({ element: p, plot })
+                SVG_ELEMENTS.plots.push({ element: p as SVGCircleElement, plot })
             })
         })
 

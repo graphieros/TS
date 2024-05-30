@@ -1,3 +1,13 @@
+export type UnknownObject = {
+    [key: string]: any
+}
+
+export type ProxyHandler = {
+    set(target: {
+        [x: string]: any;
+    }, property: string | number, newValue: any): boolean;
+}
+
 export type LineConfig = {
     // CHART SETTINGS
     chart_height?: number
@@ -108,4 +118,34 @@ export type ShapeConfig = {
     y?: number
     fill?: string
     d?: string
+}
+
+export type Coordinate = {
+    x: number
+    y: number
+    absoluteIndex?: number
+}
+
+export type LineMutableDataset = {
+    plots: Coordinate[]
+    path: string
+    color: string
+    id?: string
+}
+
+export type Scale = {
+    min: number
+    max: number
+    tickSize: number
+    ticks: number[]
+}
+
+export type LinePlotCircle = {
+    element: SVGCircleElement
+    plot: Coordinate
+}
+
+export type STACK_LINE = {
+    plots: LinePlotCircle[]
+    selectors: SVGLineElement[]
 }
