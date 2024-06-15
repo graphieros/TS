@@ -1,5 +1,9 @@
-import { Coordinate, Scale, Shape, ShapeConfig, UnknownObject } from "../../types/main";
+import { Coordinate, Scale, SerieXY, Shape, ShapeConfig, UnknownObject } from "../../types/main";
 import { CONSTANT } from "./constants";
+
+export enum ChartClass {
+    XY = "turbo-spark__XY"
+}
 
 export function createShape({
     shape,
@@ -370,8 +374,8 @@ export const palette = [
     "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"
 ];
 
-export function createSmoothPath(points: Coordinate[]): string {
-    const smoothing = 0.2;
+export function createSmoothPath(points: Coordinate[], force = 0.2): string {
+    const smoothing = force;
     function line(pointA: Coordinate, pointB: Coordinate) {
         const lengthX = pointB.x - pointA.x;
         const lengthY = pointB.y - pointA.y;
@@ -470,4 +474,12 @@ export function createUid() {
                 v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
+}
+
+export function calculateHeightRatioAuto(dataset: SerieXY[]) {
+    const datapointsWithCustomRatio = dataset.filter(ds => !!ds.datapoint_height_ratio);
+    const datapointsWithoutCustomRatio = dataset.filter(ds => !ds.datapoint_height_ratio);
+    const sumWithCustomRatio = datapointsWithCustomRatio.map(ds => ds.datapoint_height_ratio!).reduce((a:number, b:number) => a + b, 0);
+    const totalRatioLeft = 1 - sumWithCustomRatio;
+    return totalRatioLeft / datapointsWithoutCustomRatio.length
 }

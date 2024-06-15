@@ -1,7 +1,7 @@
-import { Coordinate, LineConfig, LineDataset, LineMutableDataset, STACK_LINE, Shape } from "../../types/main";
-import { config_sparkline } from "../configs/sparkline";
+import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, MutableDatasetXY, SerieXY } from "../../types/main";
+import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
-import { calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
+import { ChartClass, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
 
 export default function Sparkline({
@@ -10,12 +10,15 @@ export default function Sparkline({
     dataset
 }: {
     container: HTMLElement;
-    config?: LineConfig;
+    config?: ConfigXY;
     dataset: LineDataset;
 }) {
 
+    // IDEAS
+    // if a datapoint is null, show exclam icon ?
+
     const SVG = document.createElementNS(CONSTANT.XMLNS, "svg");
-    const SVG_ELEMENTS: STACK_LINE = {
+    const SVG_ELEMENTS: STACK_XY = {
         plots: [],
         selectors: []
     }
@@ -27,7 +30,7 @@ export default function Sparkline({
         makeChart();
     }
 
-    let finalConfig: LineConfig = useNestedProp<LineConfig>({
+    let finalConfig: ConfigXY = useNestedProp<ConfigXY>({
         defaultConfig: config_sparkline,
         userConfig: config ?? {}
     })
@@ -66,7 +69,7 @@ export default function Sparkline({
         SVG.setAttribute('viewBox', viewBox)
         SVG.style.backgroundColor = finalConfig.chart_background!;
         SVG.style.width = "100%";
-        SVG.classList.add('turbo-spark__sparkline')
+        SVG.classList.add(ChartClass.XY)
 
         // DRAWING AREA
         const drawingArea = {
@@ -80,11 +83,17 @@ export default function Sparkline({
 
         const finalDataset = detector.detectChart(dataset)
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
+
         const scale = calculateNiceScale(finalDataset.min < 0 ? finalDataset.min : 0, finalDataset.max, finalConfig.grid_axis_y_scale_ticks!);
 
-        let mutableDataset: LineMutableDataset[] = [];
+        let mutableDataset: MutableDatasetXY[] = [];
 
         if (detector.isSimpleArrayOfNumbers(finalDataset.usableDataset)) {
+
+            if (finalConfig.series_stacked) {
+                console.warn(`\n\nConfig incompatibility:\n\nThe config attribute "series_stacked" must be set to false when using a dataset that is a simple array of numbers.\n\n`)
+            }
+
             const plots = finalDataset.usableDataset.map((ds: number, i: number) => {
                 return {
                     x: drawingArea.left! + (i * slot) + (slot / 2),
@@ -95,30 +104,62 @@ export default function Sparkline({
             mutableDataset = [
                 {
                     plots,
-                    path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map((p: Coordinate) => `${p.x},${p.y} `).toString().trim(),
+                    path: finalConfig.line_smooth ? createSmoothPath(plots, finalConfig.line_smooth_force) : plots.map((p: Coordinate) => `${p.x},${p.y} `).toString().trim(),
                     color: palette[0]
                 }
             ]
         } else {
-            mutableDataset = finalDataset.usableDataset.map((ds: { VALUES: number[]; color: string; }, k: number) => {
+            let height_position = 0;
+            const multipleScales = finalDataset.usableDataset.map((ds: SerieXY) => {
+                const ds_min = Math.min(...ds.VALUES);
+                const ds_max = Math.max(...ds.VALUES);
+                return calculateNiceScale(ds_min < 0 ? ds_min : 0, ds_max, ds.datapoint_scale_ticks ?? finalConfig.grid_axis_y_scale_ticks!)
+            })
+
+            const totalStackGap = finalConfig.series_stacked ? finalConfig.series_stack_gap! * (finalDataset.usableDataset.length - 1) : 0;
+            
+            mutableDataset = finalDataset.usableDataset.map((ds: SerieXY) => {
+                const serie_height = finalConfig.series_stacked 
+                ? ds.datapoint_height_ratio
+                    ?  (drawingArea.height - totalStackGap) * ds.datapoint_height_ratio
+                    :  (drawingArea.height - totalStackGap) * calculateHeightRatioAuto(finalDataset.usableDataset)
+                : drawingArea.height;
+                return {
+                    ...ds,
+                    serie_height
+                }
+            }).map((ds: SerieXY, k: number) => {
+                
+                let individual_scale = scale;
+
+                if (finalConfig.series_stacked) {
+                    individual_scale = multipleScales[k]
+                }
+
                 const plots: Coordinate[] = ds.VALUES.map((v: number, i: number) => {
+                    
                     return {
                         x: drawingArea.left! + (i * slot) + (slot / 2),
-                        y: drawingArea.bottom - (((v + Math.abs(scale.min)) / (scale.max + Math.abs(scale.min))) * drawingArea.height),
+                        y: drawingArea.bottom - height_position - (((v + (Math.abs(individual_scale.min))) / (individual_scale.max + (Math.abs(individual_scale.min)))) * ds.serie_height!) - (k > 0 ? (finalConfig.series_stacked ? finalConfig.series_stack_gap! : 0) : 0),
                         absoluteIndex: i
                     }
                 });
+
+                if (finalConfig.series_stacked) {
+                    height_position += ds.serie_height! + (k > 0 ? (finalConfig.series_stacked ? finalConfig.series_stack_gap! : 0) : 0);
+                }
+
                 return {
                     ...ds,
+                    height_position,
+                    individual_scale,
                     id: createUid(),
                     plots,
-                    path: finalConfig.line_smooth ? createSmoothPath(plots) : plots.map(p => `${p.x},${p.y} `).toString().trim(),
+                    path: finalConfig.line_smooth ? createSmoothPath(plots, finalConfig.line_smooth_force) : plots.map(p => `${p.x},${p.y} `).toString().trim(),
                     color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
                 }
             })
         }
-
-        console.log({ mutableDataset, slot })
 
         const zeroPosition = drawingArea.bottom - ((Math.abs(scale.min) / (scale.max + Math.abs(scale.min))) * drawingArea.height);
 
@@ -193,45 +234,123 @@ export default function Sparkline({
             }
         }
 
+        // SCALE LINES & LABELS
         if (finalConfig.label_axis_y_show) {
-            scale.ticks.forEach((tick: number, i: number) => {
-                const y = drawingArea.bottom - (i * (drawingArea.height / (scale.ticks.length - 1)));
-                const label = createShape({
-                    shape: Shape.TEXT,
-                    config: {
-                        x: drawingArea.left! + finalConfig.label_axis_y_offset_x! - 6,
-                        y,
-                        'font-size': finalConfig.label_axis_y_font_size,
-                        'font-weight': finalConfig.label_axis_y_bold ? 'bold' : 'normal',
-                        fill: finalConfig.label_axis_y_color,
-                        'text-anchor': 'end'
-                    },
-                    parent: SVG
-                })
-                label.innerHTML = dataLabel({
-                    p: finalConfig.label_prefix!,
-                    v: tick,
-                    s: finalConfig.label_suffix!,
-                    r: finalConfig.label_axis_y_rounding!
-                });
 
-                if (finalConfig.grid_lines_x_show) {
+            if (finalConfig.series_stacked && finalDataset.usableDataset.length > 1) {
+                mutableDataset.forEach((ds) => {
+  
                     createShape({
                         shape: Shape.LINE,
                         config: {
                             x1: drawingArea.left,
-                            x2: drawingArea.right,
-                            y1: y,
-                            y2: y,
-                            stroke: finalConfig.grid_lines_x_stroke,
-                            'stroke-width': finalConfig.grid_lines_x_stroke_width,
+                            x2: drawingArea.left,
+                            y1: drawingArea.bottom - ds.height_position!,
+                            y2: drawingArea.bottom - ds.height_position! + ds.serie_height!,
+                            stroke: ds.color,
+                            'stroke-width': 1,
                             'stroke-linecap': 'round',
-                            'stroke-dasharray': finalConfig.grid_lines_x_stroke_dasharray
                         },
                         parent: SVG
                     })
-                }
-            })
+                    createShape({
+                        shape: Shape.LINE,
+                        config: {
+                            x1: drawingArea.right,
+                            x2: drawingArea.right,
+                            y1: drawingArea.bottom - ds.height_position!,
+                            y2: drawingArea.bottom - ds.height_position! + ds.serie_height!,
+                            stroke: ds.color,
+                            'stroke-width': 1,
+                            'stroke-linecap': 'round',
+                        },
+                        parent: SVG
+                    })
+
+                    ds.individual_scale?.ticks.reverse().forEach((tick: number, i: number) => {
+
+                        const y = drawingArea.bottom - ds.height_position! + (i * (ds.serie_height! / (ds.individual_scale!.ticks.length - 1)));
+                        console.log(y, tick)
+
+                        const label = createShape({
+                            shape: Shape.TEXT,
+                            config: {
+                                x: drawingArea.left! + finalConfig.label_axis_y_offset_x! - 6,
+                                y,
+                                'font-size': finalConfig.label_axis_y_font_size,
+                                'font-weight': finalConfig.label_axis_y_bold ? 'bold' : 'normal',
+                                fill: ds.color,
+                                'text-anchor': 'end'
+                            },
+                            parent: SVG
+                        })
+                        label.innerHTML = dataLabel({
+                            p: finalConfig.label_prefix!,
+                            v: tick,
+                            s: finalConfig.label_suffix!,
+                            r: finalConfig.label_axis_y_rounding!
+                        });
+
+                        if (finalConfig.grid_lines_x_show) {
+                            createShape({
+                                shape: Shape.LINE,
+                                config: {
+                                    x1: drawingArea.left,
+                                    x2: drawingArea.right,
+                                    y1: y,
+                                    y2: y,
+                                    stroke: ds.color,
+                                    'stroke-width': finalConfig.grid_lines_x_stroke_width,
+                                    'stroke-linecap': 'round',
+                                    'stroke-dasharray': finalConfig.grid_lines_x_stroke_dasharray
+                                },
+                                parent: SVG
+                            })
+                        }
+
+                    })
+                })
+            } else {
+                scale.ticks.forEach((tick: number, i: number) => {
+                    const y = drawingArea.bottom - (i * (drawingArea.height / (scale.ticks.length - 1)));
+                    const label = createShape({
+                        shape: Shape.TEXT,
+                        config: {
+                            x: drawingArea.left! + finalConfig.label_axis_y_offset_x! - 6,
+                            y,
+                            'font-size': finalConfig.label_axis_y_font_size,
+                            'font-weight': finalConfig.label_axis_y_bold ? 'bold' : 'normal',
+                            fill: finalConfig.label_axis_y_color,
+                            'text-anchor': 'end'
+                        },
+                        parent: SVG
+                    })
+                    label.innerHTML = dataLabel({
+                        p: finalConfig.label_prefix!,
+                        v: tick,
+                        s: finalConfig.label_suffix!,
+                        r: finalConfig.label_axis_y_rounding!
+                    });
+    
+                    if (finalConfig.grid_lines_x_show) {
+                        createShape({
+                            shape: Shape.LINE,
+                            config: {
+                                x1: drawingArea.left,
+                                x2: drawingArea.right,
+                                y1: y,
+                                y2: y,
+                                stroke: finalConfig.grid_lines_x_stroke,
+                                'stroke-width': finalConfig.grid_lines_x_stroke_width,
+                                'stroke-linecap': 'round',
+                                'stroke-dasharray': finalConfig.grid_lines_x_stroke_dasharray
+                            },
+                            parent: SVG
+                        })
+                    }
+                })
+            }
+
         }
 
         // GRID <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< GRID //
@@ -325,5 +444,5 @@ export default function Sparkline({
     return {
         dataset: observedDataset,
         config: observedConfig
-    };
+    } as ChartXY
 }

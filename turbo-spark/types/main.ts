@@ -8,7 +8,7 @@ export type ProxyHandler = {
     }, property: string | number, newValue: any): boolean;
 }
 
-export type LineConfig = {
+export type ConfigXY = {
     // CHART SETTINGS
     chart_height?: number
     chart_width?: number
@@ -32,6 +32,7 @@ export type LineConfig = {
     grid_lines_x_stroke?: string
     grid_lines_x_stroke_width?: number
     grid_lines_x_stroke_dasharray?: number
+    grid_lines_x_stroke_opacity?: number
 
     // LABEL SETTINGS
     label_axis_y_bold?: boolean
@@ -54,6 +55,7 @@ export type LineConfig = {
 
     // LINE SETTINGS
     line_smooth?: boolean
+    line_smooth_force?: 0 | 0.01 | 0.02 | 0.03 | 0.04 | 0.05 | 0.06 | 0.07 | 0.08 | 0.09 | 0.1 | 0.11 | 0.12 | 0.13 | 0.14 | 0.15 | 0.16 | 0.17 | 0.18 | 0.19 | 0.2
 
     // PLOT SETTINGS
     plot_radius?: number
@@ -67,12 +69,15 @@ export type LineConfig = {
     selector_stroke_width?: number
     selector_stroke_dasharray?: number
 
+    // SERIES SETTINGS
+    series_stacked?: boolean
+    series_stack_gap?: number
 }
 
-export type LineDataset = number[] | NameValue[] | NameValues[]
+export type LineDataset = number[] | NameValue[] | SerieXY[]
 
-export type Line = {
-    config: LineConfig
+export type ChartXY = {
+    config: ConfigXY
     dataset: LineDataset
 }
 
@@ -81,9 +86,13 @@ export type NameValue = {
     value: number
 }
 
-export type NameValues = {
+export type SerieXY = {
     name: string
-    values: number[]
+    VALUES: number[]
+    color?: string
+    serie_height?: number
+    datapoint_height_ratio?: number // 0 to 1
+    datapoint_scale_ticks?: number
 }
 
 export enum Shape {
@@ -126,11 +135,14 @@ export type Coordinate = {
     absoluteIndex?: number
 }
 
-export type LineMutableDataset = {
+export type MutableDatasetXY = {
     plots: Coordinate[]
     path: string
     color: string
     id?: string
+    individual_scale?: Scale
+    height_position?: number
+    serie_height?: number
 }
 
 export type Scale = {
@@ -140,12 +152,12 @@ export type Scale = {
     ticks: number[]
 }
 
-export type LinePlotCircle = {
+export type PlotCircle = {
     element: SVGCircleElement
     plot: Coordinate
 }
 
-export type STACK_LINE = {
-    plots: LinePlotCircle[]
+export type STACK_XY = {
+    plots: PlotCircle[]
     selectors: SVGLineElement[]
 }

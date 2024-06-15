@@ -26,9 +26,9 @@ export function detectChart(dataset: any) : { dataset: any; maxSeriesLength: num
         }
 
         if (isSimpleArrayOfObjects(dataset)) {
-            if (!isArrayOfObjectsOfSameDataType(dataset)) {
-                throw new Error('The objects in the dataset array have a different data structure. Either keys or value types are different.')
-            }
+            // if (!isArrayOfObjectsOfSameDataType(dataset)) {
+            //     throw new Error('The objects in the dataset array have a different data structure. Either keys or value types are different.')
+            // }
             const keys = Object.keys(dataset[0]);
             const values = Object.values(dataset[0]);
             if (!keys.some(key => hasValidDataTypeKey(key))) {
@@ -147,9 +147,18 @@ export function getFirstEntryMatch(datapoint: any, matchFunction: any) {
 
 export function uppercaseKeys(obj: any) {
     const newObj: any = {};
+    const exclusionList = [
+        'name',
+        'datapoint_height_ratio',
+        'datapoint_scale_ticks'
+    ]
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
-            newObj[key.toUpperCase()] = obj[key];
+            if (!exclusionList.includes(key)) {
+                newObj[key.toUpperCase()] = obj[key];
+            } else {
+                newObj[key] = obj[key]
+            }
         }
     }
     return newObj;

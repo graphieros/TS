@@ -1,3 +1,4 @@
-import Sparkline from "./components/sparkline";
+import XY from "./components/xy";
+import { type ConfigXY, type ChartXY } from "../types/main";
 
-export { Sparkline }
+export { XY, ConfigXY, ChartXY }

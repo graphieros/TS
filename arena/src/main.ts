@@ -1,40 +1,41 @@
 import "./style.css"
-import { Sparkline } from "../node_modules/turbo-spark/dist/turbo-spark"
-
+import { XY, type ConfigXY, type ChartXY } from "../node_modules/turbo-spark/dist/turbo-spark.js"
 const app = document.getElementById('app');
 
 // const dataset = [1, 2, 3, 4]
 const dataset = [
-  { name: "Serie 1", values: [12, 3, 6, -8, 3, 14, 12, 16] },
-  { name: "Serie 2", values: [3, 7, 2, 1, 6, 9, 13, 21] },
-  { name: "Serie 3", values: [21, 32, 43, 23, 21, 22, 11, 16] },
+  { name: "Serie 1", values: [12, 14, 16], datapoint_height_ratio: 0.7 },
+  { name: "Serie 2", values: [0, 1, 0, 0, 1, 0, 0, 1], datapoint_scale_ticks: 2 },
+  { name: "Serie 3", values: [0, 1, 1, 0, 0, 1, 1, 0], datapoint_scale_ticks: 2 },
 ]
 
 const datasetSimple = [10, 20, 12, 34, 13, 22, 6, 13, 25];
 
-const config = {
+const config: ConfigXY = {
   line_smooth: true,
+  line_smooth_force: 0.15,
+  series_stacked: true,
   label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP']
 }
 
-const sparkline = Sparkline({
+const chart:ChartXY = XY({
   container: app,
   dataset,
   config
 });
 
-Sparkline({
+XY({
   container: app,
   dataset: datasetSimple,
   config
 })
 
 function incrementDataset() {
-  sparkline.dataset.push({ name: 'Serie 3', values: [1, 2, 3, 4, 5, 6] })
+  chart.dataset.push({ name: 'Serie 3', values: [1, 2, 3, 4, 5, 6] })
 }
 
 function changeConfig() {
-  sparkline.config.line_smooth = !sparkline.config.line_smooth
+  chart.config.line_smooth = !chart.config.line_smooth
 }
 
 const buttonDataset = document.getElementById('addDataset')
