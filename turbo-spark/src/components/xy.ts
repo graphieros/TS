@@ -1,7 +1,7 @@
-import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, MutableDatasetXY, SerieXY, TooltipSerieContent } from "../../types/main";
+import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element } from "../../types/main";
 import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
-import { ChartClass, calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createProxyObservable, createShape, createSmoothPath, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
+import { ChartClass, calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
 
 export default function Sparkline({
@@ -21,91 +21,96 @@ export default function Sparkline({
     const SVG_ELEMENTS: STACK_XY = {
         plots: [],
         selectors: []
-    }
+    };
     const tooltipId = createUid();
     const tooltip = createTooltip(tooltipId);
     const clientPosition = {
         x: 0,
         y: 0,
-    }
+    };
     
     let init = true;
     let isTooltip = false;
     let finalDataset: any;
-    let mutableDataset: MutableDatasetXY[] = [];
+    let immutableDataset: SerieXY[] = [];
+    let mutableDataset: SerieXY[] = [];
     let tooltipContent = "";
     let finalConfig: ConfigXY = useNestedProp<ConfigXY>({
         defaultConfig: config_sparkline,
         userConfig: config ?? {}
     });
 
+    const LEGEND = createLegend(finalConfig);
+    let segregated: string[] = [];
 
     function resetChart() {
         SVG.innerHTML = "";
+        LEGEND.innerHTML = "";
         SVG_ELEMENTS.plots = [];
+        SVG_ELEMENTS.selectors = [];
         makeChart();
     }
-
 
     function hoverDatapoint(index: number) {
 
         // TOOLTIP
-        isTooltip = true;
-        const selectedDatapoints: TooltipSerieContent[] = mutableDataset.map((ds: MutableDatasetXY) => {
-            return {
-                color: ds.color!,
-                name: ds.name!,
-                value: ds.VALUES![index] ?? null,
-            }
-        })
-
-        if (finalConfig.tooltip_custom && typeof finalConfig.tooltip_custom === 'function') {
-
-            if (typeof finalConfig.tooltip_custom({
-                index,
-                series: selectedDatapoints
-            }) === 'string') {
-                tooltipContent = finalConfig.tooltip_custom({
+        if (finalConfig.tooltip_show) {
+            isTooltip = true;
+            const selectedDatapoints: TooltipSerieContent[] = mutableDataset.map((ds: SerieXY) => {
+                return {
+                    color: ds.color!,
+                    name: ds.name!,
+                    value: ds.VALUES![index] ?? null,
+                }
+            });
+    
+            if (finalConfig.tooltip_custom && typeof finalConfig.tooltip_custom === 'function') {
+    
+                if (typeof finalConfig.tooltip_custom({
                     index,
-                    series: selectedDatapoints,
-                    period: finalConfig.label_axis_x_values![index] ?? null
-                })
+                    series: selectedDatapoints
+                }) === 'string') {
+                    tooltipContent = finalConfig.tooltip_custom({
+                        index,
+                        series: selectedDatapoints,
+                        period: finalConfig.label_axis_x_values![index] ?? null
+                    });
+                } else {
+                    console.warn('\n\nInvalid custom_tooltip return type:\n\ncustom_tooltip config attriute must return a string\n\n')
+                }
+    
             } else {
-                console.warn('\n\nInvalid custom_tooltip return type:\n\ncustom_tooltip config attriute must return a string\n\n')
-            }
-
-
-        } else {
-            let html = '';
-
-            if (finalConfig.label_axis_x_values![index]) {
-                html += `<div>${finalConfig.label_axis_x_values![index]}</div>`
-            }
+                let html = '';
     
-            selectedDatapoints.forEach(p => {
-                html += `
-                    <div style="display: flex; flex-direction: row; align-items: center; gap: 4px; margin: 8px 0">
-                        <div style="width:12px; display: flex; align-items:center">
-                            <svg height="12" width="12" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="${p.color}"/></svg>
+                if (finalConfig.label_axis_x_values![index]) {
+                    html += `<div>${finalConfig.label_axis_x_values![index]}</div>`
+                }
+        
+                selectedDatapoints.forEach(p => {
+                    html += `
+                        <div style="display: flex; flex-direction: row; align-items: center; gap: 4px; margin: 8px 0">
+                            <div style="width:12px; display: flex; align-items:center">
+                                <svg height="12" width="12" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="${p.color}"/></svg>
+                            </div>
+                            <div>
+                                <span>${p.name} : </span>
+                                <b>${dataLabel({
+                                    p: finalConfig.label_prefix ?? '',
+                                    v: p.value,
+                                    s: finalConfig.label_suffix ?? '',
+                                    r: finalConfig.tooltip_value_rounding ?? 0
+                                })}</b>
+                            </div>
                         </div>
-                        <div>
-                            <span>${p.name} : </span>
-                            <b>${dataLabel({
-                                p: finalConfig.label_prefix ?? '',
-                                v: p.value,
-                                s: finalConfig.label_suffix ?? '',
-                                r: finalConfig.tooltip_value_rounding ?? 0
-                            })}</b>
-                        </div>
+                    `
+                });
+        
+                tooltipContent = `
+                    <div style="background:${finalConfig.tooltip_background_color}; color:${finalConfig.tooltip_color}; font-size:${finalConfig.tooltip_font_size}px; padding:${finalConfig.tooltip_padding}px; border-radius:${finalConfig.tooltip_border_radius}px;border:${finalConfig.tooltip_border}; box-shadow:${finalConfig.tooltip_box_shadow};max-width:${finalConfig.tooltip_max_width}px">
+                        ${html}
                     </div>
-                `
-            })
-    
-            tooltipContent = `
-                <div style="background:${finalConfig.tooltip_background_color}; color:${finalConfig.tooltip_color}; font-size:${finalConfig.tooltip_font_size}px; padding:${finalConfig.tooltip_padding}px; border-radius:${finalConfig.tooltip_border_radius}px;border:${finalConfig.tooltip_border}; box-shadow:${finalConfig.tooltip_box_shadow};max-width:${finalConfig.tooltip_max_width}px">
-                    ${html}
-                </div>
-            `;
+                `;
+            }
         }
 
 
@@ -124,7 +129,7 @@ export default function Sparkline({
                 } else {
                     selector.setAttribute('stroke', 'transparent')
                 }
-            })
+            });
         }
     }
 
@@ -135,7 +140,7 @@ export default function Sparkline({
         });
         SVG_ELEMENTS.selectors.forEach((s) => {
             s.setAttribute('stroke', 'transparent')
-        })
+        });
     }
 
     function makeChart() {
@@ -144,7 +149,7 @@ export default function Sparkline({
         SVG.setAttribute('viewBox', viewBox)
         SVG.style.backgroundColor = finalConfig.chart_background!;
         SVG.style.width = "100%";
-        SVG.classList.add(ChartClass.XY)
+        SVG.classList.add(ChartClass.XY);
 
         // DRAWING AREA
         const drawingArea = {
@@ -154,9 +159,9 @@ export default function Sparkline({
             bottom: finalConfig.chart_height! - finalConfig.chart_padding_bottom!,
             width: finalConfig.chart_width! - finalConfig.chart_padding_left! - finalConfig.chart_padding_right!,
             height: finalConfig.chart_height! - finalConfig.chart_padding_top! - finalConfig.chart_padding_bottom!
-        }
+        };
 
-        finalDataset = detector.detectChart(dataset)
+        finalDataset = detector.detectChart(dataset);
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
 
         const scale = calculateNiceScale(finalDataset.min < 0 ? finalDataset.min : 0, finalDataset.max, finalConfig.grid_axis_y_scale_ticks!);
@@ -164,7 +169,7 @@ export default function Sparkline({
         if (detector.isSimpleArrayOfNumbers(finalDataset.usableDataset)) {
 
             if (finalConfig.series_stacked) {
-                console.warn(`\n\nConfig incompatibility:\n\nThe config attribute "series_stacked" must be set to false when using a dataset that is a simple array of numbers.\n\n`)
+                console.warn(`\n\nConfig incompatibility:\n\nThe config attribute "series_stacked" must be set to false when using a dataset that is a simple array of numbers.\n\n`);
             }
 
             const plots = finalDataset.usableDataset.map((ds: number, i: number) => {
@@ -174,30 +179,40 @@ export default function Sparkline({
                     absoluteIndex: i
                 }
             });
+
             mutableDataset = [
                 {
                     plots,
                     path: finalConfig.line_smooth ? createSmoothPath(plots, finalConfig.line_smooth_force) : plots.map((p: Coordinate) => `${p.x},${p.y} `).toString().trim(),
                     color: palette[0]
                 }
-            ]
+            ] as SerieXY[];
 
         } else {
 
             let height_position = 0;
-            const multipleScales = finalDataset.usableDataset.map((ds: SerieXY) => {
+            
+            immutableDataset = finalDataset.usableDataset.map((ds:SerieXY, k: number) => {
+                return {
+                    ...ds,
+                    id: `xy_serie_${k}`,
+                    color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
+                }
+            }) as SerieXY[];
+
+            const multipleScales = immutableDataset.filter(ds => !segregated.includes(ds.id)).map((ds: SerieXY) => {
                 const ds_min = Math.min(...ds.VALUES);
                 const ds_max = Math.max(...ds.VALUES);
                 return calculateNiceScale(ds_min < 0 ? ds_min : 0, ds_max, ds.datapoint_scale_ticks ?? finalConfig.grid_axis_y_scale_ticks!)
-            })
+            });
 
-            const totalStackGap = finalConfig.series_stacked ? finalConfig.series_stack_gap! * (finalDataset.usableDataset.length - 1) : 0;
-            
-            mutableDataset = finalDataset.usableDataset.map((ds: SerieXY) => {
+            const totalStackGap = finalConfig.series_stacked ? finalConfig.series_stack_gap! * (immutableDataset.filter(ds => !segregated.includes(ds.id)).length - 1) : 0;
+
+            mutableDataset = immutableDataset.filter((ds:SerieXY) => !segregated.includes(ds.id)).map((ds: SerieXY) => {
                 const serie_height = finalConfig.series_stacked 
                 ? ds.datapoint_height_ratio
-                    ?  (drawingArea.height - totalStackGap) * ds.datapoint_height_ratio
-                    :  (drawingArea.height - totalStackGap) * calculateHeightRatioAuto(finalDataset.usableDataset)
+                    ?  (drawingArea.height - totalStackGap) * (immutableDataset.filter((ds:SerieXY) => !segregated.includes(ds.id)).length === 1 ? 1 : ds.datapoint_height_ratio)
+                    :  (drawingArea.height - totalStackGap) * calculateHeightRatioAuto(immutableDataset.filter(ds => !segregated.includes(ds.id)))
                 : drawingArea.height;
                 return {
                     ...ds,
@@ -212,7 +227,6 @@ export default function Sparkline({
                 }
 
                 const plots: Coordinate[] = ds.VALUES.map((v: number, i: number) => {
-                    
                     return {
                         x: drawingArea.left! + (i * slot) + (slot / 2),
                         y: drawingArea.bottom - height_position - (((v + (Math.abs(individual_scale.min))) / (individual_scale.max + (Math.abs(individual_scale.min)))) * ds.serie_height!) - (k > 0 ? (finalConfig.series_stacked ? finalConfig.series_stack_gap! : 0) : 0),
@@ -244,19 +258,49 @@ export default function Sparkline({
                     ...ds,
                     height_position,
                     individual_scale,
-                    id: createUid(),
+                    id: `xy_serie_${k}`,
                     plots,
-                    path,
-                    color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
+                    path
                 }
-            })
+            });
         }
 
         const zeroPosition = drawingArea.bottom - ((Math.abs(scale.min) / (scale.max + Math.abs(scale.min))) * drawingArea.height);
 
         // GRID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GRID //
 
-        if (finalConfig.grid_axis_y_show) {
+        if (finalConfig.chart_area_background_show) {
+            if (finalConfig.series_stacked) {
+                mutableDataset.forEach((ds: SerieXY) => {
+                    const serieBg = createShape({
+                        shape: Shape.RECT,
+                        config: {
+                            x: drawingArea.left,
+                            y: drawingArea.bottom - ds.height_position!,
+                            fill: ds.color,
+                            width: drawingArea.width,
+                            height: ds.serie_height
+                        },
+                        parent: SVG
+                    });
+                    serieBg.style.opacity = String(finalConfig.chart_area_background_opacity);
+                });
+            } else {
+                const serieBg = createShape({
+                    shape: Shape.RECT,
+                    config: {
+                        x: drawingArea.left,
+                        y: drawingArea.top,
+                        width: drawingArea.width,
+                        height: drawingArea.height
+                    },
+                    parent: SVG
+                });
+                serieBg.style.opacity = String(finalConfig.chart_area_background_opacity);
+            }
+        }
+
+        if (finalConfig.grid_axis_y_show && !finalConfig.series_stacked) {
             createShape({
                 shape: Shape.LINE,
                 config: {
@@ -269,7 +313,7 @@ export default function Sparkline({
                     'stroke-linecap': 'round'
                 },
                 parent: SVG
-            })
+            });
         }
 
         if (finalConfig.grid_axis_x_show && !finalConfig.series_stacked) {
@@ -285,25 +329,47 @@ export default function Sparkline({
                     'stroke-linecap': 'round'
                 },
                 parent: SVG
-            })
+            });
         }
 
         if (finalConfig.grid_lines_y_show) {
-            for (let i = 1; i < finalDataset.maxSeriesLength + 1; i += 1) {
-                createShape({
-                    shape: Shape.LINE,
-                    config: {
-                        x1: drawingArea.left! + (slot * i),
-                        x2: drawingArea.left! + (slot * i),
-                        y1: drawingArea.top,
-                        y2: drawingArea.bottom,
-                        stroke: finalConfig.grid_lines_y_stroke,
-                        'stroke-width': finalConfig.grid_lines_y_stroke_width,
-                        'stroke-linecap': 'round',
-                        'stroke-dasharray': finalConfig.grid_lines_y_stroke_dasharray
-                    },
-                    parent: SVG
-                })
+            if (finalConfig.series_stacked) {
+                mutableDataset.forEach((ds: SerieXY) => {
+                    for(let i = 0; i < finalDataset.maxSeriesLength; i += 1) {
+                        const line = createShape({
+                            shape: Shape.LINE,
+                            config: {
+                                x1: drawingArea.left! + (slot * i),
+                                x2: drawingArea.left! + (slot * i),
+                                y1: drawingArea.bottom - ds.height_position!,
+                                y2: drawingArea.bottom - ds.height_position! + ds.serie_height!,
+                                stroke: ds.color,
+                                'stroke-width': finalConfig.grid_lines_y_stroke_width,
+                                'stroke-linecap': 'round',
+                                'stroke-dasharray': finalConfig.grid_lines_y_stroke_dasharray
+                            },
+                            parent: SVG
+                        });
+                        line.style.opacity = '0.4';
+                    }
+                });
+            } else {
+                for (let i = 1; i < finalDataset.maxSeriesLength + 1; i += 1) {
+                    createShape({
+                        shape: Shape.LINE,
+                        config: {
+                            x1: drawingArea.left! + (slot * i),
+                            x2: drawingArea.left! + (slot * i),
+                            y1: drawingArea.top,
+                            y2: drawingArea.bottom,
+                            stroke: finalConfig.grid_lines_y_stroke,
+                            'stroke-width': finalConfig.grid_lines_y_stroke_width,
+                            'stroke-linecap': 'round',
+                            'stroke-dasharray': finalConfig.grid_lines_y_stroke_dasharray
+                        },
+                        parent: SVG
+                    });
+                }
             }
         }
 
@@ -320,7 +386,7 @@ export default function Sparkline({
                         'text-anchor': 'middle'
                     },
                     parent: SVG
-                })
+                });
                 label.innerHTML = finalConfig.label_axis_x_values![i]
             }
         }
@@ -338,9 +404,9 @@ export default function Sparkline({
                             'text-anchor': 'middle'
                         },
                         parent: SVG
-                    })
+                    });
 
-                    serieLabel.innerHTML = ds.name!
+                    serieLabel.innerHTML = ds.name!;
                     serieLabel.setAttribute('transform', `translate(${drawingArea.left! + finalConfig.grid_axis_y_name_offset_x!}, ${drawingArea.bottom - ds.height_position! + ds.serie_height! / 2}) rotate(-90)`);
                     serieLabel.setAttribute('font-size', String(finalConfig.grid_axis_names_font_size));
 
@@ -356,7 +422,7 @@ export default function Sparkline({
                             'stroke-linecap': 'round',
                         },
                         parent: SVG
-                    })
+                    });
                     createShape({
                         shape: Shape.LINE,
                         config: {
@@ -369,7 +435,7 @@ export default function Sparkline({
                             'stroke-linecap': 'round',
                         },
                         parent: SVG
-                    })
+                    });
 
                     ds.individual_scale?.ticks.reverse().forEach((tick: number, i: number) => {
 
@@ -386,7 +452,8 @@ export default function Sparkline({
                                 'text-anchor': 'end'
                             },
                             parent: SVG
-                        })
+                        });
+
                         label.innerHTML = dataLabel({
                             p: finalConfig.label_prefix!,
                             v: tick,
@@ -408,11 +475,10 @@ export default function Sparkline({
                                     'stroke-dasharray': finalConfig.grid_lines_x_stroke_dasharray
                                 },
                                 parent: SVG
-                            })
+                            });
                         }
-
-                    })
-                })
+                    });
+                });
             } else {
                 scale.ticks.forEach((tick: number, i: number) => {
                     const y = drawingArea.bottom - (i * (drawingArea.height / (scale.ticks.length - 1)));
@@ -427,7 +493,8 @@ export default function Sparkline({
                             'text-anchor': 'end'
                         },
                         parent: SVG
-                    })
+                    });
+
                     label.innerHTML = dataLabel({
                         p: finalConfig.label_prefix!,
                         v: tick,
@@ -449,13 +516,64 @@ export default function Sparkline({
                                 'stroke-dasharray': finalConfig.grid_lines_x_stroke_dasharray
                             },
                             parent: SVG
-                        })
+                        });
                     }
-                })
+                });
             }
-
         }
 
+        // DATA LABELS
+        mutableDataset.forEach(ds => {
+            if ([true, false].includes(ds.datapoint_datalabel_show!) && ds.datapoint_datalabel_show) {
+                ds.plots.forEach((plot, i) => {
+                    const label = createShape({
+                        shape: Shape.TEXT,
+                        config: {
+                            fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                            x: plot.x,
+                            y: plot.y + finalConfig.datalabel_offset_y!,
+                            'text-anchor': 'middle'
+                        },
+                        parent: SVG
+                    });
+
+                    label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+
+                    label.innerHTML = dataLabel({
+                        p: finalConfig.label_prefix!,
+                        v: ds.VALUES![i],
+                        s: finalConfig.label_suffix!,
+                        r: finalConfig.datalabel_rounding ?? 0
+                    });
+                });
+            } else {
+                if (finalConfig.datalabel_show && ![true, false].includes(ds.datapoint_datalabel_show!)) {
+                    ds.plots.forEach((plot, i) => {
+                        const label = createShape({
+                            shape: Shape.TEXT,
+                            config: {
+                                fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                                x: plot.x,
+                                y: plot.y + finalConfig.datalabel_offset_y!,
+                                'text-anchor': 'middle'
+                            },
+                            parent: SVG
+                        });
+
+                        label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+
+                        label.innerHTML = dataLabel({
+                            p: finalConfig.label_prefix!,
+                            v: ds.VALUES![i],
+                            s: finalConfig.label_suffix!,
+                            r: finalConfig.datalabel_rounding ?? 0
+                        });
+                    });
+                }
+            }
+        });
+
+        // AXIS NAMES
         if (finalConfig.grid_axis_x_name) {
             const xAxisName = createShape({
                 shape: Shape.TEXT,
@@ -507,7 +625,7 @@ export default function Sparkline({
                     },
                     parent: SVG
                 });
-                SVG_ELEMENTS.selectors.push(selector as SVGLineElement)
+                SVG_ELEMENTS.selectors.push(selector as SVGLineElement);
             }
         }
 
@@ -537,10 +655,10 @@ export default function Sparkline({
                         'stroke-width': finalConfig.plot_stroke_width!
                     },
                     parent: SVG
-                })
-                SVG_ELEMENTS.plots.push({ element: p as SVGCircleElement, plot })
-            })
-        })
+                });
+                SVG_ELEMENTS.plots.push({ element: p as SVGCircleElement, plot });
+            });
+        });
 
         // PLOTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PLOTS //
 
@@ -557,15 +675,56 @@ export default function Sparkline({
                     height: drawingArea.height,
                     fill: 'transparent'
                 },
-            })
+            });
 
-            SVG.appendChild(trap)
-            trap.addEventListener('mouseenter', () => hoverDatapoint(i))
-            trap.addEventListener('mouseout', resetDatapoints)
+            SVG.appendChild(trap);
+            trap.addEventListener('mouseenter', () => hoverDatapoint(i));
+            trap.addEventListener('mouseout', resetDatapoints);
         }
+
+        // LEGEND
+
+        function segregateLegendItem(id: string) {
+            if (segregated.includes(id)) {
+                segregated = segregated.filter(el => el !== id);
+            } else {
+                segregated.push(id);
+            }
+            resetChart();
+        }
+
+        if (finalConfig.legend_show) {
+            const LEGEND_WRAPPER = document.createElement(Element.DIV);
+            LEGEND_WRAPPER.setAttribute('style', 'display:flex; flex-direction: row; flex-wrap: wrap; gap: 12px; align-items:center; justify-content: center;');
+
+            immutableDataset.forEach((ds: SerieXY) => {
+                const LEGEND_ITEM = document.createElement(Element.DIV);
+                LEGEND_ITEM.setAttribute('style', 'display: flex; flex-direction: row; gap: 4px; align-items:center; justify-content:center;');
+                let html = "";
+
+                html += `<div style="width:14px; display:flex; align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="5" cy="5" r="5" fill="${ds.color}"/></svg></div>`;
+                html += `<span>${ds.name}</span>`;
+
+                LEGEND_ITEM.innerHTML = html;
+                LEGEND_ITEM.addEventListener('click', () => segregateLegendItem(ds.id!));
+                if (segregated.includes(ds.id)) {
+                    LEGEND_ITEM.style.opacity = '0.5';
+                } else {
+                    LEGEND_ITEM.style.opacity = '1';
+                }
+                LEGEND_WRAPPER.appendChild(LEGEND_ITEM);
+            });
+
+            LEGEND.appendChild(LEGEND_WRAPPER);
+        }
+
+        // FIRST LOAD
 
         if (init) {
             container.appendChild(SVG);
+            if (finalConfig.legend_show) {
+                container.appendChild(LEGEND);
+            }
 
             SVG.addEventListener('mousemove', (e) => {
                 clientPosition.x = e.clientX;
@@ -576,16 +735,17 @@ export default function Sparkline({
                         tooltip,
                         chart: SVG,
                         clientPosition
-                    })
+                    });
 
                     tooltip.style.display = "block";
                     tooltip.style.top = String(top) + 'px';
                     tooltip.style.left = String(left) + 'px';
                     tooltip.innerHTML = tooltipContent;
+
                 } else {
                     tooltip.style.display = "none";
                 }
-            })
+            });
 
             SVG.addEventListener('mouseout', () => {
                 isTooltip = false;
@@ -599,9 +759,8 @@ export default function Sparkline({
     const observedDataset = createProxyObservable(dataset, resetChart);
     const observedConfig = createProxyObservable(finalConfig, resetChart);
 
-
     return {
         dataset: observedDataset,
         config: observedConfig
-    } as ChartXY
+    } as ChartXY;
 }

@@ -151,7 +151,8 @@ export function uppercaseKeys(obj: any) {
         'name',
         'datapoint_height_ratio',
         'datapoint_scale_ticks',
-        'datapoint_line_smooth'
+        'datapoint_line_smooth',
+        'datapoint_datalabel_show'
     ]
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {

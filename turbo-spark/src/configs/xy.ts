@@ -9,6 +9,9 @@ export const config_sparkline: ConfigXY = {
     chart_padding_right: 12,
     chart_padding_bottom: 48,
     chart_background: "#FFFFFF",
+    chart_area_background_show: true,
+    chart_area_background: "#1A1A1A",
+    chart_area_background_opacity: 0.01,
 
     // GRID SETTINGS
     grid_axis_x_name: '',
@@ -51,6 +54,14 @@ export const config_sparkline: ConfigXY = {
     label_axis_x_offset_x: 0,
     label_axis_x_offset_y: 0,
 
+    // DATA LABEL SETTINGS
+    datalabel_show: true,
+    datalabel_use_serie_color: true,
+    datalabel_default_color: '#1A1A1A',
+    datalabel_font_size: 10,
+    datalabel_rounding: 1,
+    datalabel_offset_y: -6,
+
     // TOOLTIP SETTINGS
     tooltip_show: true,
     tooltip_value_rounding: 1,
@@ -82,5 +93,11 @@ export const config_sparkline: ConfigXY = {
 
     // SERIES SETTINGS
     series_stacked: false,
-    series_stack_gap: 20
+    series_stack_gap: 20,
+
+    // LEGEND SETTINGS
+    legend_show: true,
+    legend_background: "#FFFFFF",
+    legend_color: "#1A1A1A",
+    legend_font_size: 14
 }

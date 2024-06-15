@@ -1,4 +1,5 @@
-import { Coordinate, Scale, SerieXY, Shape, ShapeConfig, UnknownObject } from "../../types/main";
+import { ChartLegend } from "../../types/common";
+import { Coordinate, Element, Scale, SerieXY, Shape, ShapeConfig, UnknownObject } from "../../types/main";
 import { CONSTANT } from "./constants";
 
 export enum ChartClass {
@@ -520,4 +521,16 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition }: { toolti
         top: clientPosition.y + offsetY,
         left: clientPosition.x + offsetX
     }
+}
+
+export function createLegend<C>(config: C) : HTMLDivElement {
+    const legend = document.createElement(Element.DIV);
+    legend.style.width = '100%';
+    legend.style.padding = '12px 0';
+    legend.style.background = (config as ChartLegend).legend_background!;
+    legend.style.color = (config as ChartLegend).legend_color!;
+    legend.style.fontSize = (config as ChartLegend).legend_font_size + 'px';
+    legend.style.userSelect = 'none';
+    legend.style.cursor = 'pointer';
+    return legend;
 }

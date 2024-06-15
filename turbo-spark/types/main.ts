@@ -1,3 +1,5 @@
+import { ChartLegend, ChartTooltip } from "./common";
+
 export type UnknownObject = {
     [key: string]: any
 }
@@ -8,7 +10,7 @@ export type ProxyHandler = {
     }, property: string | number, newValue: any): boolean;
 }
 
-export type ConfigXY = {
+export type ConfigXY = ChartLegend & ChartTooltip & {
     // CHART SETTINGS
     chart_height?: number
     chart_width?: number
@@ -17,6 +19,9 @@ export type ConfigXY = {
     chart_padding_bottom?: number
     chart_padding_left?: number
     chart_background?: string
+    chart_area_background_show?: boolean
+    chart_area_background?: string
+    chart_area_background_opacity?: number
 
     // GRID SETTINGS
     grid_axis_x_name?: string
@@ -59,18 +64,15 @@ export type ConfigXY = {
     label_axis_x_offset_x?: number
     label_axis_x_offset_y?: number
 
-    // TOOLTIP SETTINGS
-    tooltip_show?: boolean
-    tooltip_value_rounding?: number
-    tooltip_background_color?: string
-    tooltip_font_size?: number
-    tooltip_color?: string
-    tooltip_padding?: number
-    tooltip_border_radius?: number
-    tooltip_border?: string
-    tooltip_box_shadow?: string
-    tooltip_max_width?: number
-    tooltip_custom?: null | Function
+    // DATA LABEL SETTINGS
+    datalabel_show?: boolean
+    datalabel_use_serie_color?: boolean
+    datalabel_default_color?: string
+    datalabel_font_size?: number
+    datalabel_rounding?: number
+    datalabel_offset_y?: number
+
+    // TOOLTIP SETTINGS (common ChartTooltip)
 
     // LINE SETTINGS
     line_smooth?: boolean
@@ -91,6 +93,8 @@ export type ConfigXY = {
     // SERIES SETTINGS
     series_stacked?: boolean
     series_stack_gap?: number
+
+    // LEGEND SETTINGS (common ChartLegend)
 }
 
 export type LineDataset = number[] | NameValue[] | SerieXY[]
@@ -113,6 +117,12 @@ export type SerieXY = {
     datapoint_height_ratio?: number // 0 to 1
     datapoint_scale_ticks?: number
     datapoint_line_smooth?: boolean
+    datapoint_datalabel_show?: boolean
+    height_position?: number
+    individual_scale?: Scale
+    plots: Coordinate[]
+    path?: string
+    id: string
 }
 
 export type TooltipSerieContent = Pick<SerieXY, 'name' | 'color'> & { value: number }
@@ -173,6 +183,7 @@ export type MutableDatasetXY = {
     individual_scale?: Scale
     height_position?: number
     serie_height?: number
+    datapoint_datalabel_show?: boolean
 }
 
 export type Scale = {

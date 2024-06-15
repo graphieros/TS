@@ -1,12 +1,12 @@
 import "./style.css"
 import { XY, type ConfigXY, type ChartXY } from "../node_modules/turbo-spark/dist/turbo-spark.js"
-const app = document.getElementById('app');
+const app = document.getElementById('container');
 
 // const dataset = [1, 2, 3, 4]
 const dataset = [
-  { name: "Serie 1", values: [12, -14, 16], datapoint_height_ratio: 0.8 },
-  { name: "Serie 2", values: [0, 1, 0, 0, 1, 0, 0, 1], datapoint_scale_ticks: 2, datapoint_line_smooth: false },
-  { name: "Serie 3", values: [0, 1, 1, 0, 0, 1, 1, 0], datapoint_scale_ticks: 2, datapoint_line_smooth: false },
+  { name: "Serie 1", values: [1250, 990, 515, -200, 455, -512, 980, 1320], datapoint_height_ratio: 0.6, datapoint_scale_ticks: 3 },
+  { name: "Serie 2", values: [0, 1, 0, 0, 1, 0, 0, 1], datapoint_scale_ticks: 2, datapoint_line_smooth: false, datapoint_datalabel_show: false },
+  { name: "Serie 3", values: [0, 1, 1, 0, 0, 1, 1, 0], datapoint_scale_ticks: 2, datapoint_line_smooth: false, datapoint_datalabel_show: false },
 ]
 
 const datasetSimple = [10, 20, 12, 34, 13, 22, 6, 13, 25];
@@ -14,6 +14,7 @@ const datasetSimple = [10, 20, 12, 34, 13, 22, 6, 13, 25];
 const config: ConfigXY = {
   line_smooth: true,
   line_smooth_force: 0.15,
+  tooltip_show: true,
   series_stacked: true,
   grid_axis_y_name: 'Strength',
   grid_axis_x_name: 'Time flies',
@@ -24,24 +25,25 @@ const config: ConfigXY = {
   // }
 }
 
-const chart:ChartXY = XY({
+const chart: ChartXY = XY({
   container: app,
   dataset,
   config
 });
 
-XY({
-  container: app,
-  dataset: datasetSimple,
-  config
-})
+// XY({
+//   container: app,
+//   dataset: datasetSimple,
+//   config
+// })
 
 function incrementDataset() {
-  chart.dataset.push({ name: 'Serie 3', values: [1, 2, 3, 4, 5, 6] })
+  chart.dataset.push({ name: 'Serie 3', values: [0, 1, 1, 1, 0, 0, 0, 0, 1, 1], datapoint_line_smooth: false, datapoint_scale_ticks: 2, datapoint_datalabel_show: false })
 }
 
 function changeConfig() {
   chart.config.line_smooth = !chart.config.line_smooth
+  chart.config.chart_background = `rgb(${Math.round(Math.random()* 255)},${Math.round(Math.random()* 255)},${Math.round(Math.random()* 255)})`
 }
 
 const buttonDataset = document.getElementById('addDataset')
