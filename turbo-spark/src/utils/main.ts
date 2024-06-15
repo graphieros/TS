@@ -483,3 +483,41 @@ export function calculateHeightRatioAuto(dataset: SerieXY[]) {
     const totalRatioLeft = 1 - sumWithCustomRatio;
     return totalRatioLeft / datapointsWithoutCustomRatio.length
 }
+
+export function createTooltip(id: string) {
+    const TOOLTIP = document.createElement('div');
+    TOOLTIP.setAttribute('id', `tooltip_${id}`);
+    TOOLTIP.style.position = 'fixed';
+    TOOLTIP.style.top = '-10';
+    TOOLTIP.style.left = '-10';
+    TOOLTIP.style.display = 'none';
+    TOOLTIP.style.color = "black"; // TEMP
+    document.body.appendChild(TOOLTIP)
+    return TOOLTIP as HTMLElement;
+}
+
+export function calcTooltipPosition({ tooltip, chart, clientPosition }: { tooltip: HTMLElement, chart: SVGSVGElement, clientPosition: { x: number, y: number }}) {
+    
+    let offsetX = 0;
+    let offsetY = 48;
+    if (tooltip && chart) {
+        const { width, height } = tooltip.getBoundingClientRect();
+        const { right, left, bottom } = chart.getBoundingClientRect();
+
+        if (clientPosition.x + width / 2 > right) {
+            offsetX = -width;
+        } else if (clientPosition.x - width / 2 < left) {
+            offsetX = 0;
+        } else {
+            offsetX = -width / 2;
+        }
+
+        if (clientPosition.y + height > bottom) {
+            offsetY = -height - 48;
+        }
+    }
+    return {
+        top: clientPosition.y + offsetY,
+        left: clientPosition.x + offsetX
+    }
+}

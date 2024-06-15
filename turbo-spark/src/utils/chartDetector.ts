@@ -150,7 +150,8 @@ export function uppercaseKeys(obj: any) {
     const exclusionList = [
         'name',
         'datapoint_height_ratio',
-        'datapoint_scale_ticks'
+        'datapoint_scale_ticks',
+        'datapoint_line_smooth'
     ]
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {

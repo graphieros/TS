@@ -19,6 +19,12 @@ export type ConfigXY = {
     chart_background?: string
 
     // GRID SETTINGS
+    grid_axis_x_name?: string
+    grid_axis_x_name_offset_y?: number
+    grid_axis_y_name_offset_x?: number
+    grid_axis_y_name?: string
+    grid_axis_names_font_size?: number
+    grid_axis_names_color?: string
     grid_axis_stroke?: string
     grid_axis_stroke_width?: number
     grid_axis_x_show?: boolean
@@ -52,6 +58,19 @@ export type ConfigXY = {
     label_axis_x_show?: boolean
     label_axis_x_offset_x?: number
     label_axis_x_offset_y?: number
+
+    // TOOLTIP SETTINGS
+    tooltip_show?: boolean
+    tooltip_value_rounding?: number
+    tooltip_background_color?: string
+    tooltip_font_size?: number
+    tooltip_color?: string
+    tooltip_padding?: number
+    tooltip_border_radius?: number
+    tooltip_border?: string
+    tooltip_box_shadow?: string
+    tooltip_max_width?: number
+    tooltip_custom?: null | Function
 
     // LINE SETTINGS
     line_smooth?: boolean
@@ -93,7 +112,10 @@ export type SerieXY = {
     serie_height?: number
     datapoint_height_ratio?: number // 0 to 1
     datapoint_scale_ticks?: number
+    datapoint_line_smooth?: boolean
 }
+
+export type TooltipSerieContent = Pick<SerieXY, 'name' | 'color'> & { value: number }
 
 export enum Shape {
     CIRCLE = "circle",
@@ -102,6 +124,12 @@ export enum Shape {
     TEXT = "text",
     POLYGON = "polygon",
     PATH = "path"
+}
+
+export enum Element {
+    DIV = 'div',
+    SPAN = 'span',
+    HR = 'hr',
 }
 
 export type ShapeConfig = {
@@ -136,6 +164,8 @@ export type Coordinate = {
 }
 
 export type MutableDatasetXY = {
+    name?: string
+    VALUES?: number[]
     plots: Coordinate[]
     path: string
     color: string
