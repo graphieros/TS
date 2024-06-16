@@ -77,12 +77,20 @@ export type ConfigXY = ChartLegend & ChartTooltip & {
     // LINE SETTINGS
     line_smooth?: boolean
     line_smooth_force?: 0 | 0.01 | 0.02 | 0.03 | 0.04 | 0.05 | 0.06 | 0.07 | 0.08 | 0.09 | 0.1 | 0.11 | 0.12 | 0.13 | 0.14 | 0.15 | 0.16 | 0.17 | 0.18 | 0.19 | 0.2
+    line_sheathed?: boolean
+    line_stroke_width?: number
 
     // PLOT SETTINGS
     plot_radius?: number
     plot_stroke?: string
     plot_stroke_width?: number
     plot_focus_radius?: number
+
+    // BAR SETTINGS
+    bar_border_radius?: number
+    bar_group_gap_proportion?: number
+    bar_stroke?: string
+    bar_stroke_width?: number
 
     // SELECTOR
     selector_show?: boolean
@@ -109,7 +117,13 @@ export type NameValue = {
     value: number
 }
 
+export enum SerieXYType {
+    BAR = "bar",
+    LINE = "line"
+}
+
 export type SerieXY = {
+    type: SerieXYType
     name: string
     VALUES: number[]
     color?: string
@@ -118,7 +132,9 @@ export type SerieXY = {
     datapoint_scale_ticks?: number
     datapoint_line_smooth?: boolean
     datapoint_datalabel_show?: boolean
+    datapoint_line_stroke_width?: number
     height_position?: number
+    zero_position?: number
     individual_scale?: Scale
     plots: Coordinate[]
     path?: string
@@ -165,12 +181,14 @@ export type ShapeConfig = {
     y?: number
     fill?: string
     d?: string
+    rx?: number | string
 }
 
 export type Coordinate = {
     x: number
     y: number
     absoluteIndex?: number
+    plot_height?: number
 }
 
 export type MutableDatasetXY = {
@@ -201,4 +219,21 @@ export type PlotCircle = {
 export type STACK_XY = {
     plots: PlotCircle[]
     selectors: SVGLineElement[]
+}
+
+export enum CssClass {
+    CHART_SVG = "chart-svg",
+    CHART_TOOLTIP = "chart-tooltip",
+    CHART_TOOLTIP_PERIOD = "chart-tooltip__period",
+    CHART_TOOLTIP_CONTENT = "chart-tooltip__content",
+    CHART_TOOLTIP_MARKER = "chart-tooltip__marker",
+    CHART_TOOLTIP_NAME_VALUE = "chart-tooltip__name-value",
+    CHART_LINE = "chart-line",
+    CHART_LINE_PLOT = "chart-line__plot",
+    CHART_LINE_SHEATHED = "chart-line__sheathed",
+    CHART_BAR = "chart-bar"
+}
+
+export enum ChartClass {
+    XY = "chart-svg__xy"
 }

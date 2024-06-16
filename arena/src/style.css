@@ -95,6 +95,22 @@ button:focus-visible {
   }
 }
 
-.turbo-spark__sparkline * {
-  transition: all 0.1s ease-in-out;
+/* .chart-line {
+  animation: appear 0.3s ease-in;
+  transform-origin: center;
 }
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8,0.8);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.03, 1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+} */

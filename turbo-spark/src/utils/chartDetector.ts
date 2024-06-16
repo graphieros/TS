@@ -2,7 +2,7 @@ export const nameType = ['NAME', 'TITLE', 'DESCRIPTION', 'LABEL'];
 export const dataType = ['SERIE', 'SERIES', 'DATA', 'VALUE', 'VALUES', 'NUM'];
 export const timeType = ['TIME', 'PERIOD', 'MONTH', 'YEAR', 'MONTHS', 'YEARS', 'DAY', 'DAYS', 'HOUR', 'HOURS']
 
-export function detectChart(dataset: any) : { dataset: any; maxSeriesLength: number; usableDataset: any, min: number; max: number}{
+export function detectChart(dataset: any, segregated: string[]) : { dataset: any; maxSeriesLength: number; usableDataset: any, min: number; max: number}{
     let usableDataset = null;
     let maxSeriesLength = 0;
 
@@ -40,17 +40,18 @@ export function detectChart(dataset: any) : { dataset: any; maxSeriesLength: num
             })) {
 
                 maxSeriesLength = maxLengthOfArrayTypesInArrayOfObjects(dataset);
-                usableDataset = dataset.map((d: any) => {
+                usableDataset = dataset.map((d: any, i: number) => {
                     return {
                         ...d,
-                        data: getFirstEntryMatch(d, (v: any) => isSimpleArrayOfNumbers(v))
+                        data: getFirstEntryMatch(d, (v: any) => isSimpleArrayOfNumbers(v)),
+                        id: `xy_serie_${i}`,
                     }
                 })
             }
             dataset = dataset.map((d: any) => uppercaseKeys(d))
             usableDataset = usableDataset.map((d: any) => uppercaseKeys(d))
-            max = Math.max(...usableDataset.flatMap((d:any) => d.VALUES))
-            min = Math.min(...usableDataset.flatMap((d:any) => d.VALUES)) > 0 ? 0 : Math.min(...usableDataset.flatMap((d:any) => d.VALUES))
+            max = Math.max(...(usableDataset.filter((ds:any) => !segregated.includes(ds.id))).flatMap((d:any) => d.VALUES))
+            min = Math.min(...(usableDataset.filter((ds:any) => !segregated.includes(ds.id))).flatMap((d:any) => d.VALUES)) > 0 ? 0 : Math.min(...(usableDataset.filter((ds:any) => !segregated.includes(ds.id))).flatMap((d:any) => d.VALUES))
         }
     }
 
@@ -148,11 +149,15 @@ export function getFirstEntryMatch(datapoint: any, matchFunction: any) {
 export function uppercaseKeys(obj: any) {
     const newObj: any = {};
     const exclusionList = [
+        'id',
         'name',
+        'type',
+        'color',
         'datapoint_height_ratio',
         'datapoint_scale_ticks',
         'datapoint_line_smooth',
-        'datapoint_datalabel_show'
+        'datapoint_datalabel_show',
+        'datapoint_line_stroke_width'
     ]
     for (let key in obj) {
         if (obj.hasOwnProperty(key)) {

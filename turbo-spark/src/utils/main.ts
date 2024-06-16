@@ -2,10 +2,6 @@ import { ChartLegend } from "../../types/common";
 import { Coordinate, Element, Scale, SerieXY, Shape, ShapeConfig, UnknownObject } from "../../types/main";
 import { CONSTANT } from "./constants";
 
-export enum ChartClass {
-    XY = "turbo-spark__XY"
-}
-
 export function createShape({
     shape,
     config,

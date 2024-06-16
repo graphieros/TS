@@ -4,9 +4,9 @@ const app = document.getElementById('container');
 
 // const dataset = [1, 2, 3, 4]
 const dataset = [
-  { name: "Serie 1", values: [1250, 990, 515, -200, 455, -512, 980, 1320], datapoint_height_ratio: 0.6, datapoint_scale_ticks: 3 },
-  { name: "Serie 2", values: [0, 1, 0, 0, 1, 0, 0, 1], datapoint_scale_ticks: 2, datapoint_line_smooth: false, datapoint_datalabel_show: false },
-  { name: "Serie 3", values: [0, 1, 1, 0, 0, 1, 1, 0], datapoint_scale_ticks: 2, datapoint_line_smooth: false, datapoint_datalabel_show: false },
+  { type: "bar", name: "Serie 1", values: [1, -2, 5, 8], datapoint_height_ratio: 0.6, datapoint_scale_ticks: 3 },
+  { type: "bar", name: "Serie 2", values: [2, 3, -6, 9], datapoint_scale_ticks: 2, datapoint_line_smooth: false, datapoint_datalabel_show: true },
+  { type: "line", name: "Serie 3", values: [3, -4, 7, 20], datapoint_scale_ticks: 2, datapoint_line_smooth: false, datapoint_datalabel_show: true },
 ]
 
 const datasetSimple = [10, 20, 12, 34, 13, 22, 6, 13, 25];
@@ -15,7 +15,7 @@ const config: ConfigXY = {
   line_smooth: true,
   line_smooth_force: 0.15,
   tooltip_show: true,
-  series_stacked: true,
+  series_stacked: false,
   grid_axis_y_name: 'Strength',
   grid_axis_x_name: 'Time flies',
   label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'],
@@ -43,7 +43,7 @@ function incrementDataset() {
 
 function changeConfig() {
   chart.config.line_smooth = !chart.config.line_smooth
-  chart.config.chart_background = `rgb(${Math.round(Math.random()* 255)},${Math.round(Math.random()* 255)},${Math.round(Math.random()* 255)})`
+  chart.config.chart_background = `rgb(${Math.round(Math.random() * 255)},${Math.round(Math.random() * 255)},${Math.round(Math.random() * 255)})`
 }
 
 const buttonDataset = document.getElementById('addDataset')

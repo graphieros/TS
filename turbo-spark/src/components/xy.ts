@@ -1,7 +1,7 @@
-import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element } from "../../types/main";
+import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element, CssClass, ChartClass, SerieXYType } from "../../types/main";
 import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
-import { ChartClass, calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
+import { calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
 
 export default function Sparkline({
@@ -18,6 +18,9 @@ export default function Sparkline({
     // if a datapoint is null, show exclam icon ?
 
     const SVG = document.createElementNS(CONSTANT.XMLNS, "svg");
+    SVG.classList.add(CssClass.CHART_SVG);
+    SVG.classList.add(ChartClass.XY);
+
     const SVG_ELEMENTS: STACK_XY = {
         plots: [],
         selectors: []
@@ -42,6 +45,7 @@ export default function Sparkline({
 
     const LEGEND = createLegend(finalConfig);
     let segregated: string[] = [];
+    let bars = 0;
 
     function resetChart() {
         SVG.innerHTML = "";
@@ -83,16 +87,16 @@ export default function Sparkline({
                 let html = '';
     
                 if (finalConfig.label_axis_x_values![index]) {
-                    html += `<div>${finalConfig.label_axis_x_values![index]}</div>`
+                    html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${finalConfig.label_axis_x_values![index]}</div>`
                 }
         
                 selectedDatapoints.forEach(p => {
                     html += `
-                        <div style="display: flex; flex-direction: row; align-items: center; gap: 4px; margin: 8px 0">
-                            <div style="width:12px; display: flex; align-items:center">
+                        <div class="${CssClass.CHART_TOOLTIP_CONTENT}" style="display: flex; flex-direction: row; align-items: center; gap: 4px; margin: 8px 0">
+                            <div class="${CssClass.CHART_TOOLTIP_MARKER}" style="width:12px; display: flex; align-items:center">
                                 <svg height="12" width="12" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="${p.color}"/></svg>
                             </div>
-                            <div>
+                            <div class="${CssClass.CHART_TOOLTIP_NAME_VALUE}">
                                 <span>${p.name} : </span>
                                 <b>${dataLabel({
                                     p: finalConfig.label_prefix ?? '',
@@ -106,7 +110,7 @@ export default function Sparkline({
                 });
         
                 tooltipContent = `
-                    <div style="background:${finalConfig.tooltip_background_color}; color:${finalConfig.tooltip_color}; font-size:${finalConfig.tooltip_font_size}px; padding:${finalConfig.tooltip_padding}px; border-radius:${finalConfig.tooltip_border_radius}px;border:${finalConfig.tooltip_border}; box-shadow:${finalConfig.tooltip_box_shadow};max-width:${finalConfig.tooltip_max_width}px">
+                    <div class="${CssClass.CHART_TOOLTIP}" style="background:${finalConfig.tooltip_background_color}; color:${finalConfig.tooltip_color}; font-size:${finalConfig.tooltip_font_size}px; padding:${finalConfig.tooltip_padding}px; border-radius:${finalConfig.tooltip_border_radius}px;border:${finalConfig.tooltip_border}; box-shadow:${finalConfig.tooltip_box_shadow};max-width:${finalConfig.tooltip_max_width}px">
                         ${html}
                     </div>
                 `;
@@ -149,7 +153,6 @@ export default function Sparkline({
         SVG.setAttribute('viewBox', viewBox)
         SVG.style.backgroundColor = finalConfig.chart_background!;
         SVG.style.width = "100%";
-        SVG.classList.add(ChartClass.XY);
 
         // DRAWING AREA
         const drawingArea = {
@@ -161,7 +164,8 @@ export default function Sparkline({
             height: finalConfig.chart_height! - finalConfig.chart_padding_top! - finalConfig.chart_padding_bottom!
         };
 
-        finalDataset = detector.detectChart(dataset);
+        finalDataset = detector.detectChart(dataset, segregated);
+
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
 
         const scale = calculateNiceScale(finalDataset.min < 0 ? finalDataset.min : 0, finalDataset.max, finalConfig.grid_axis_y_scale_ticks!);
@@ -195,6 +199,7 @@ export default function Sparkline({
             immutableDataset = finalDataset.usableDataset.map((ds:SerieXY, k: number) => {
                 return {
                     ...ds,
+                    type: ds.type ?? SerieXYType.LINE,
                     id: `xy_serie_${k}`,
                     color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
                 }
@@ -226,11 +231,16 @@ export default function Sparkline({
                     individual_scale = multipleScales[k]
                 }
 
+                const zero_position = drawingArea.bottom - height_position - ((((Math.abs(individual_scale.min))) / (individual_scale.max + (Math.abs(individual_scale.min)))) * ds.serie_height!) - (k > 0 ? (finalConfig.series_stacked ? finalConfig.series_stack_gap! : 0) : 0);
+
                 const plots: Coordinate[] = ds.VALUES.map((v: number, i: number) => {
+                    const plot_height = (((Math.abs(v) + Math.abs(individual_scale.min)) / (Math.abs(individual_scale.max) + Math.abs(individual_scale.min))) * (ds.serie_height!)) - (Math.abs(individual_scale.min) / (Math.abs(individual_scale.max) + Math.abs(individual_scale.min)) * ds.serie_height!);
+
                     return {
                         x: drawingArea.left! + (i * slot) + (slot / 2),
                         y: drawingArea.bottom - height_position - (((v + (Math.abs(individual_scale.min))) / (individual_scale.max + (Math.abs(individual_scale.min)))) * ds.serie_height!) - (k > 0 ? (finalConfig.series_stacked ? finalConfig.series_stack_gap! : 0) : 0),
-                        absoluteIndex: i
+                        absoluteIndex: i,
+                        plot_height
                     }
                 });
 
@@ -256,6 +266,7 @@ export default function Sparkline({
 
                 return {
                     ...ds,
+                    zero_position,
                     height_position,
                     individual_scale,
                     id: `xy_serie_${k}`,
@@ -263,6 +274,8 @@ export default function Sparkline({
                     path
                 }
             });
+
+            bars = mutableDataset.filter(ds => ds.type === SerieXYType.BAR).length;
         }
 
         const zeroPosition = drawingArea.bottom - ((Math.abs(scale.min) / (scale.max + Math.abs(scale.min))) * drawingArea.height);
@@ -308,22 +321,6 @@ export default function Sparkline({
                     x2: finalConfig.chart_padding_left,
                     y1: finalConfig.chart_padding_top,
                     y2: finalConfig.chart_height! - finalConfig.chart_padding_bottom!,
-                    stroke: finalConfig.grid_axis_stroke,
-                    'stroke-width': finalConfig.grid_axis_stroke_width,
-                    'stroke-linecap': 'round'
-                },
-                parent: SVG
-            });
-        }
-
-        if (finalConfig.grid_axis_x_show && !finalConfig.series_stacked) {
-            createShape({
-                shape: Shape.LINE,
-                config: {
-                    x1: drawingArea.left,
-                    x2: drawingArea.right,
-                    y1: zeroPosition,
-                    y2: zeroPosition,
                     stroke: finalConfig.grid_axis_stroke,
                     'stroke-width': finalConfig.grid_axis_stroke_width,
                     'stroke-linecap': 'round'
@@ -522,57 +519,6 @@ export default function Sparkline({
             }
         }
 
-        // DATA LABELS
-        mutableDataset.forEach(ds => {
-            if ([true, false].includes(ds.datapoint_datalabel_show!) && ds.datapoint_datalabel_show) {
-                ds.plots.forEach((plot, i) => {
-                    const label = createShape({
-                        shape: Shape.TEXT,
-                        config: {
-                            fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
-                            x: plot.x,
-                            y: plot.y + finalConfig.datalabel_offset_y!,
-                            'text-anchor': 'middle'
-                        },
-                        parent: SVG
-                    });
-
-                    label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
-
-                    label.innerHTML = dataLabel({
-                        p: finalConfig.label_prefix!,
-                        v: ds.VALUES![i],
-                        s: finalConfig.label_suffix!,
-                        r: finalConfig.datalabel_rounding ?? 0
-                    });
-                });
-            } else {
-                if (finalConfig.datalabel_show && ![true, false].includes(ds.datapoint_datalabel_show!)) {
-                    ds.plots.forEach((plot, i) => {
-                        const label = createShape({
-                            shape: Shape.TEXT,
-                            config: {
-                                fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
-                                x: plot.x,
-                                y: plot.y + finalConfig.datalabel_offset_y!,
-                                'text-anchor': 'middle'
-                            },
-                            parent: SVG
-                        });
-
-                        label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
-
-                        label.innerHTML = dataLabel({
-                            p: finalConfig.label_prefix!,
-                            v: ds.VALUES![i],
-                            s: finalConfig.label_suffix!,
-                            r: finalConfig.datalabel_rounding ?? 0
-                        });
-                    });
-                }
-            }
-        });
-
         // AXIS NAMES
         if (finalConfig.grid_axis_x_name) {
             const xAxisName = createShape({
@@ -631,17 +577,72 @@ export default function Sparkline({
 
         // PLOTS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PLOTS //
 
-        mutableDataset.forEach((ds) => {
-            createShape({
+        // BARS
+        mutableDataset.filter(ds => ds.type === SerieXYType.BAR).forEach((ds, k) => {
+            if (finalConfig.series_stacked) {
+                ds.plots.forEach((plot, i) => {
+                    const bar = createShape({
+                        shape: Shape.RECT,
+                        config: {
+                            x: (plot.x - slot / 2) + (slot * finalConfig.bar_group_gap_proportion! / 2),
+                            y: ds.VALUES[i] >= 0 ? plot.y : ds.zero_position,
+                            height: plot.plot_height,
+                            width: slot - (slot * finalConfig.bar_group_gap_proportion!),
+                            fill: ds.color + '66'
+                        },
+                        parent: SVG
+                    });
+                    bar.classList.add(CssClass.CHART_BAR);
+                });
+            } else {
+                console.log('WUT', bars, k)
+                ds.plots.forEach((plot, i) => {
+                    const bar = createShape({
+                        shape: Shape.RECT,
+                        config: {
+                            x: (plot.x - slot / 2) + (slot * finalConfig.bar_group_gap_proportion! / 2) + (k > 0 ? (slot - finalConfig.bar_group_gap_proportion! * slot) / bars * k : 0),
+                            y: ds.VALUES[i] >= 0 ? plot.y : ds.zero_position,
+                            height: plot.plot_height,
+                            width: (slot - finalConfig.bar_group_gap_proportion! * slot) / bars,
+                            fill: ds.color + '66',
+                            stroke: finalConfig.bar_stroke,
+                            'stroke-width': finalConfig.bar_stroke_width,
+                            rx: finalConfig.bar_border_radius
+                        },
+                        parent: SVG
+                    });
+                    bar.classList.add(CssClass.CHART_BAR);
+                });
+            }
+        });
+
+        // LINES
+        mutableDataset.filter(ds => ds.type === SerieXYType.LINE).forEach((ds) => {
+            const pathSheathed = createShape({
                 shape: Shape.PATH,
                 config: {
                     d: `M${ds.path}`,
-                    stroke: ds.color,
-                    'stroke-width': 1,
+                    stroke: finalConfig.chart_background,
+                    'stroke-width': (ds.datapoint_line_stroke_width || finalConfig.line_stroke_width || 1) * 2,
                     fill: 'none'
                 },
                 parent: SVG
             });
+
+            pathSheathed.classList.add(CssClass.CHART_LINE_SHEATHED);
+
+            const path = createShape({
+                shape: Shape.PATH,
+                config: {
+                    d: `M${ds.path}`,
+                    stroke: ds.color,
+                    'stroke-width': ds.datapoint_line_stroke_width || finalConfig.line_stroke_width || 1,
+                    fill: 'none'
+                },
+                parent: SVG
+            });
+
+            path.classList.add(CssClass.CHART_LINE);
 
             ds.plots.forEach((plot) => {
                 const p = createShape({
@@ -656,11 +657,177 @@ export default function Sparkline({
                     },
                     parent: SVG
                 });
+                p.classList.add(CssClass.CHART_LINE_PLOT);
                 SVG_ELEMENTS.plots.push({ element: p as SVGCircleElement, plot });
             });
         });
 
         // PLOTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PLOTS //
+
+        // ZERO POSITION (non stacked)
+        if (finalConfig.grid_axis_x_show && !finalConfig.series_stacked) {
+            createShape({
+                shape: Shape.LINE,
+                config: {
+                    x1: drawingArea.left,
+                    x2: drawingArea.right,
+                    y1: zeroPosition,
+                    y2: zeroPosition,
+                    stroke: finalConfig.grid_axis_stroke,
+                    'stroke-width': finalConfig.grid_axis_stroke_width,
+                    'stroke-linecap': 'round'
+                },
+                parent: SVG
+            });
+        }
+
+        // DATA LABELS
+        // BAR DATA LABELS
+        mutableDataset.filter(ds => ds.type === SerieXYType.BAR).forEach((ds, k) => {
+            if ([true, false].includes(ds.datapoint_datalabel_show!) && ds.datapoint_datalabel_show) {
+                ds.plots.forEach((plot, i) => {
+
+                    if (finalConfig.series_stacked) {
+                        const label = createShape({
+                            shape: Shape.TEXT,
+                            config: {
+                                fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                                x: plot.x,
+                                y: ds.VALUES[i] >= 0 ? plot.y + finalConfig.datalabel_offset_y! : ds.zero_position! + finalConfig.datalabel_offset_y!,
+                                'text-anchor': 'middle'
+                            },
+                            parent: SVG
+                        });
+                        label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+    
+                        label.innerHTML = dataLabel({
+                            p: finalConfig.label_prefix!,
+                            v: ds.VALUES![i],
+                            s: finalConfig.label_suffix!,
+                            r: finalConfig.datalabel_rounding ?? 0
+                        });
+                    } else {
+                        const label = createShape({
+                            shape: Shape.TEXT,
+                            config: {
+                                fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                                x: (plot.x - slot / 2) + (slot * finalConfig.bar_group_gap_proportion! / 2) + (k > 0 ? (slot - finalConfig.bar_group_gap_proportion! * slot) / bars * k : 0) + ((slot - finalConfig.bar_group_gap_proportion! * slot) / bars / 2),
+                                y: ds.VALUES[i] >= 0 ? plot.y + finalConfig.datalabel_offset_y! : ds.zero_position! + finalConfig.datalabel_offset_y!,
+                                'text-anchor': 'middle'
+                            },
+                            parent: SVG
+                        });
+                        label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+    
+                        label.innerHTML = dataLabel({
+                            p: finalConfig.label_prefix!,
+                            v: ds.VALUES![i],
+                            s: finalConfig.label_suffix!,
+                            r: finalConfig.datalabel_rounding ?? 0
+                        });
+                    }
+
+                });
+            } else {
+                if (finalConfig.datalabel_show && ![true, false].includes(ds.datapoint_datalabel_show!)) {
+
+                    ds.plots.forEach((plot, i) => {
+                        if (finalConfig.series_stacked) {
+                            const label = createShape({
+                                shape: Shape.TEXT,
+                                config: {
+                                    fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                                    x: plot.x,
+                                    y: ds.VALUES[i] >= 0 ? plot.y + finalConfig.datalabel_offset_y! : ds.zero_position! + finalConfig.datalabel_offset_y!,
+                                    'text-anchor': 'middle'
+                                },
+                                parent: SVG
+                            });
+    
+                            label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+    
+                            label.innerHTML = dataLabel({
+                                p: finalConfig.label_prefix!,
+                                v: ds.VALUES![i],
+                                s: finalConfig.label_suffix!,
+                                r: finalConfig.datalabel_rounding ?? 0
+                            });
+                        } else {
+                            const label = createShape({
+                                shape: Shape.TEXT,
+                                config: {
+                                    fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                                    x: (plot.x - slot / 2) + (slot * finalConfig.bar_group_gap_proportion! / 2) + (k > 0 ? (slot - finalConfig.bar_group_gap_proportion! * slot) / bars * k : 0) + ((slot - finalConfig.bar_group_gap_proportion! * slot) / bars / 2),
+                                    y: ds.VALUES[i] >= 0 ? plot.y + finalConfig.datalabel_offset_y! : ds.zero_position! + finalConfig.datalabel_offset_y!,
+                                    'text-anchor': 'middle'
+                                },
+                                parent: SVG
+                            });
+    
+                            label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+    
+                            label.innerHTML = dataLabel({
+                                p: finalConfig.label_prefix!,
+                                v: ds.VALUES![i],
+                                s: finalConfig.label_suffix!,
+                                r: finalConfig.datalabel_rounding ?? 0
+                            });
+                        }
+                    });
+                }
+            }
+        })
+
+        // LINE DATA LABELS
+        mutableDataset.filter(ds => ds.type === SerieXYType.LINE).forEach((ds, _k) => {
+            if ([true, false].includes(ds.datapoint_datalabel_show!) && ds.datapoint_datalabel_show) {
+                ds.plots.forEach((plot, i) => {
+                    const label = createShape({
+                        shape: Shape.TEXT,
+                        config: {
+                            fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                            x: plot.x,
+                            y: plot.y + finalConfig.datalabel_offset_y!,
+                            'text-anchor': 'middle'
+                        },
+                        parent: SVG
+                    });
+
+                    label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+
+                    label.innerHTML = dataLabel({
+                        p: finalConfig.label_prefix!,
+                        v: ds.VALUES![i],
+                        s: finalConfig.label_suffix!,
+                        r: finalConfig.datalabel_rounding ?? 0
+                    });
+                });
+            } else {
+                if (finalConfig.datalabel_show && ![true, false].includes(ds.datapoint_datalabel_show!)) {
+                    ds.plots.forEach((plot, i) => {
+                        const label = createShape({
+                            shape: Shape.TEXT,
+                            config: {
+                                fill: finalConfig.datalabel_use_serie_color ? ds.color : finalConfig.datalabel_default_color,
+                                x: plot.x,
+                                y: plot.y + finalConfig.datalabel_offset_y!,
+                                'text-anchor': 'middle'
+                            },
+                            parent: SVG
+                        });
+
+                        label.setAttribute('font-size', String(finalConfig.datalabel_font_size));
+
+                        label.innerHTML = dataLabel({
+                            p: finalConfig.label_prefix!,
+                            v: ds.VALUES![i],
+                            s: finalConfig.label_suffix!,
+                            r: finalConfig.datalabel_rounding ?? 0
+                        });
+                    });
+                }
+            }
+        });
 
 
         // MOUSE TRAPS

@@ -78,12 +78,20 @@ export const config_sparkline: ConfigXY = {
     // LINE SETTINGS
     line_smooth: false,
     line_smooth_force: 0.15, // between 0 and 0.2
+    line_sheathed: true,
+    line_stroke_width: 1,
 
     // PLOT SETTINGS
     plot_radius: 3,
     plot_stroke: "#FFFFFF",
     plot_stroke_width: 1,
     plot_focus_radius: 5,
+
+    // BAR SETTINGS
+    bar_border_radius: 2,
+    bar_group_gap_proportion: 0.3,
+    bar_stroke: '#FFFFFF',
+    bar_stroke_width: 0.75,
 
     // SELECTOR
     selector_show: true,
