@@ -18,3 +18,19 @@ export type ChartTooltip = {
     tooltip_max_width?: number
     tooltip_custom?: null | Function
 }
+
+export type TextAlign = "left" | "center" | "right"
+
+export type ChartTitle = {
+    title_show?: boolean;
+    title_background?: string;
+    title_align?: TextAlign
+    title_text?: string
+    title_color?: string
+    title_font_size?: number
+    title_bold?: boolean
+    subtitle_text?: string
+    subtitle_color?: string
+    subtitle_font_size?: number
+    subtitle_bold?: boolean
+}

@@ -34,6 +34,7 @@ export const config_sparkline: ConfigXY = {
     grid_lines_x_stroke_width: 0.5,
     grid_lines_x_stroke_dasharray: 2,
     grid_lines_x_stroke_opacity: 0.5,
+    grid_lines_y_stroke_opacity: 0.3,
 
     // LABEL SETTINGS
     label_axis_y_bold: false,
@@ -80,6 +81,7 @@ export const config_sparkline: ConfigXY = {
     line_smooth_force: 0.15, // between 0 and 0.2
     line_sheathed: true,
     line_stroke_width: 1,
+    line_area_opacity: 0.2,
 
     // PLOT SETTINGS
     plot_radius: 3,
@@ -107,5 +109,18 @@ export const config_sparkline: ConfigXY = {
     legend_show: true,
     legend_background: "#FFFFFF",
     legend_color: "#1A1A1A",
-    legend_font_size: 14
+    legend_font_size: 14,
+
+    // TITLE SETTINGS
+    title_show: true,
+    title_background: '#FFFFFF',
+    title_align: 'center',
+    title_text: "",
+    title_color: "#1A1A1A",
+    title_font_size: 20,
+    title_bold: true,
+    subtitle_text: "",
+    subtitle_color: "#8A8A8A",
+    subtitle_font_size: 16,
+    subtitle_bold: false
 }

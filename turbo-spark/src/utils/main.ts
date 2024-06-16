@@ -1,5 +1,5 @@
-import { ChartLegend } from "../../types/common";
-import { Coordinate, Element, Scale, SerieXY, Shape, ShapeConfig, UnknownObject } from "../../types/main";
+import { ChartLegend, ChartTitle } from "../../types/common";
+import { Coordinate, CssClass, Element, Scale, SerieXY, Shape, ShapeConfig, UnknownObject } from "../../types/main";
 import { CONSTANT } from "./constants";
 
 export function createShape({
@@ -529,4 +529,36 @@ export function createLegend<C>(config: C) : HTMLDivElement {
     legend.style.userSelect = 'none';
     legend.style.cursor = 'pointer';
     return legend;
+}
+
+export function createTitle(config: ChartTitle): HTMLDivElement {
+    const title_wrapper  = document.createElement(Element.DIV);
+    title_wrapper.setAttribute('style', `
+        background:${config.title_background};
+        display: flex;
+        flex-direction: column;
+        align-items: ${config.title_align === 'left' ? 'flex-start' : config.title_align === 'right' ? 'flex-end' : 'center'}
+    `)
+    title_wrapper.classList.add(CssClass.CHART_TITLE);
+
+    const title = document.createElement(Element.DIV);
+    title.setAttribute('style', `
+        color:${config.title_color};
+        font-size:${config.title_font_size}px;
+        font-weight:${config.title_bold ? 'bold': 'normal'};
+    `)
+    title.innerText = config.title_text || '';
+    
+    const subtitle = document.createElement(Element.DIV);
+    subtitle.setAttribute('style', `
+    color:${config.subtitle_color};
+    font-size:${config.subtitle_font_size}px;
+    font-weight:${config.subtitle_bold ? 'bold': 'normal'};
+    `)
+    subtitle.innerText = config.subtitle_text || '';
+
+    title_wrapper.appendChild(title);
+    title_wrapper.appendChild(subtitle);
+
+    return title_wrapper;
 }

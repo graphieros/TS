@@ -1,4 +1,4 @@
-import { ChartLegend, ChartTooltip } from "./common";
+import { ChartLegend, ChartTitle, ChartTooltip } from "./common";
 
 export type UnknownObject = {
     [key: string]: any
@@ -10,7 +10,7 @@ export type ProxyHandler = {
     }, property: string | number, newValue: any): boolean;
 }
 
-export type ConfigXY = ChartLegend & ChartTooltip & {
+export type ConfigXY = ChartLegend & ChartTooltip & ChartTitle & {
     // CHART SETTINGS
     chart_height?: number
     chart_width?: number
@@ -36,6 +36,7 @@ export type ConfigXY = ChartLegend & ChartTooltip & {
     grid_axis_y_show?: boolean
     grid_axis_y_scale_ticks?: number
     grid_lines_y_show?: boolean
+    grid_lines_y_stroke_opacity?: number
     grid_lines_y_stroke?: string
     grid_lines_y_stroke_width?: number
     grid_lines_y_stroke_dasharray?: number
@@ -72,37 +73,41 @@ export type ConfigXY = ChartLegend & ChartTooltip & {
     datalabel_rounding?: number
     datalabel_offset_y?: number
 
-    // TOOLTIP SETTINGS (common ChartTooltip)
-
+    
     // LINE SETTINGS
     line_smooth?: boolean
     line_smooth_force?: 0 | 0.01 | 0.02 | 0.03 | 0.04 | 0.05 | 0.06 | 0.07 | 0.08 | 0.09 | 0.1 | 0.11 | 0.12 | 0.13 | 0.14 | 0.15 | 0.16 | 0.17 | 0.18 | 0.19 | 0.2
     line_sheathed?: boolean
     line_stroke_width?: number
-
+    line_area_opacity?: number
+    
     // PLOT SETTINGS
     plot_radius?: number
     plot_stroke?: string
     plot_stroke_width?: number
     plot_focus_radius?: number
-
+    
     // BAR SETTINGS
     bar_border_radius?: number
     bar_group_gap_proportion?: number
     bar_stroke?: string
     bar_stroke_width?: number
-
+    
     // SELECTOR
     selector_show?: boolean
     selector_stroke?: string
     selector_stroke_width?: number
     selector_stroke_dasharray?: number
-
+    
     // SERIES SETTINGS
     series_stacked?: boolean
     series_stack_gap?: number
 
+    // TOOLTIP SETTINGS (common ChartTooltip)
+    
     // LEGEND SETTINGS (common ChartLegend)
+    
+    // TITLE SETTINGS (common ChartTitle)
 }
 
 export type LineDataset = number[] | NameValue[] | SerieXY[]
@@ -128,17 +133,20 @@ export type SerieXY = {
     VALUES: number[]
     color?: string
     serie_height?: number
-    datapoint_height_ratio?: number // 0 to 1
-    datapoint_scale_ticks?: number
-    datapoint_line_smooth?: boolean
-    datapoint_datalabel_show?: boolean
-    datapoint_line_stroke_width?: number
     height_position?: number
     zero_position?: number
     individual_scale?: Scale
     plots: Coordinate[]
     path?: string
+    area_path?: string
     id: string
+    // Individual datapoint config
+    datapoint_height_ratio?: number // 0 to 1
+    datapoint_scale_ticks?: number
+    datapoint_line_smooth?: boolean
+    datapoint_datalabel_show?: boolean
+    datapoint_line_stroke_width?: number
+    datapoint_line_show_area?: boolean
 }
 
 export type TooltipSerieContent = Pick<SerieXY, 'name' | 'color'> & { value: number }
@@ -231,7 +239,9 @@ export enum CssClass {
     CHART_LINE = "chart-line",
     CHART_LINE_PLOT = "chart-line__plot",
     CHART_LINE_SHEATHED = "chart-line__sheathed",
-    CHART_BAR = "chart-bar"
+    CHART_LINE_AREA = "chart-line__area",
+    CHART_BAR = "chart-bar",
+    CHART_TITLE = "chart-title"
 }
 
 export enum ChartClass {

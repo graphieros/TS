@@ -1,8 +1,9 @@
 import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element, CssClass, ChartClass, SerieXYType } from "../../types/main";
 import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
-import { calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
+import { calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTitle, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
+import { ChartTitle } from "../../types/common";
 
 export default function Sparkline({
     container,
@@ -44,12 +45,14 @@ export default function Sparkline({
     });
 
     const LEGEND = createLegend(finalConfig);
+    let TITLE: any;
     let segregated: string[] = [];
     let bars = 0;
 
     function resetChart() {
         SVG.innerHTML = "";
         LEGEND.innerHTML = "";
+        TITLE = "";
         SVG_ELEMENTS.plots = [];
         SVG_ELEMENTS.selectors = [];
         makeChart();
@@ -148,6 +151,8 @@ export default function Sparkline({
     }
 
     function makeChart() {
+
+        TITLE = createTitle(finalConfig satisfies ChartTitle);
 
         const viewBox = `0 0 ${finalConfig.chart_width} ${finalConfig.chart_height}`
         SVG.setAttribute('viewBox', viewBox)
@@ -249,20 +254,26 @@ export default function Sparkline({
                 }
 
                 let path = "";
+                let area_path = "";
 
                 if ([true, false].includes(ds.datapoint_line_smooth!)) {
                     if(ds.datapoint_line_smooth) {
                         path = createSmoothPath(plots, finalConfig.line_smooth_force)
+                        area_path = `${plots[0].x},${zero_position} ${path} L${plots.at(-1)!.x}, ${zero_position}`
                     } else {
                         path = plots.map(p => `${p.x},${p.y} `).toString().trim();
+                        area_path = `${plots[0].x},${zero_position} ${path} ${plots.at(-1)!.x}, ${zero_position}`
                     }
                 } else {
                     if (finalConfig.line_smooth) {
                         path = createSmoothPath(plots, finalConfig.line_smooth_force)
+                        area_path = `${plots[0].x},${zero_position} ${path} L${plots.at(-1)!.x}, ${zero_position}`
                     } else {
                         path = plots.map(p => `${p.x},${p.y} `).toString().trim();
+                        area_path = `${plots[0].x},${zero_position} ${path} ${plots.at(-1)!.x}, ${zero_position}`
                     }
                 }
+                
 
                 return {
                     ...ds,
@@ -271,7 +282,8 @@ export default function Sparkline({
                     individual_scale,
                     id: `xy_serie_${k}`,
                     plots,
-                    path
+                    path,
+                    area_path
                 }
             });
 
@@ -347,12 +359,12 @@ export default function Sparkline({
                             },
                             parent: SVG
                         });
-                        line.style.opacity = '0.4';
+                        line.style.opacity = String(finalConfig.grid_lines_y_stroke_opacity);
                     }
                 });
             } else {
                 for (let i = 1; i < finalDataset.maxSeriesLength + 1; i += 1) {
-                    createShape({
+                    const line = createShape({
                         shape: Shape.LINE,
                         config: {
                             x1: drawingArea.left! + (slot * i),
@@ -366,11 +378,12 @@ export default function Sparkline({
                         },
                         parent: SVG
                     });
+                    line.style.opacity = String(finalConfig.grid_lines_y_stroke_opacity);
                 }
             }
         }
 
-        if (finalConfig.label_axis_x_show && finalConfig.label_axis_x_values!.length) {
+        if (finalConfig.label_axis_x_show) {
             for (let i = 0; i < finalDataset.maxSeriesLength; i += 1) {
                 const label = createShape({
                     shape: Shape.TEXT,
@@ -384,7 +397,7 @@ export default function Sparkline({
                     },
                     parent: SVG
                 });
-                label.innerHTML = finalConfig.label_axis_x_values![i]
+                label.innerHTML = finalConfig.label_axis_x_values![i] ?? i
             }
         }
 
@@ -618,6 +631,22 @@ export default function Sparkline({
 
         // LINES
         mutableDataset.filter(ds => ds.type === SerieXYType.LINE).forEach((ds) => {
+
+            // AREA
+            if (ds.datapoint_line_show_area) {
+                const area = createShape({
+                    shape: Shape.PATH,
+                    config: {
+                        d: `M${ds.area_path}Z`,
+                        fill: ds.color,
+                        stroke: 'transparent'
+                    },
+                    parent: SVG
+                })
+                area.classList.add(CssClass.CHART_LINE_AREA);
+                area.style.opacity = String(finalConfig.line_area_opacity);
+            }
+
             const pathSheathed = createShape({
                 shape: Shape.PATH,
                 config: {
@@ -888,6 +917,9 @@ export default function Sparkline({
         // FIRST LOAD
 
         if (init) {
+            if (finalConfig.title_show) {
+                container.appendChild(TITLE);
+            }
             container.appendChild(SVG);
             if (finalConfig.legend_show) {
                 container.appendChild(LEGEND);
