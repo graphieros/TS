@@ -3,6 +3,7 @@ export type ChartLegend = {
     legend_background?: string
     legend_color?: string
     legend_font_size?: number
+    legend_marker_size?: number
 }
 
 export type ChartTooltip = {
@@ -17,6 +18,7 @@ export type ChartTooltip = {
     tooltip_box_shadow?: string
     tooltip_max_width?: number
     tooltip_custom?: null | Function
+    tooltip_marker_size?: number
 }
 
 export type TextAlign = "left" | "center" | "right"

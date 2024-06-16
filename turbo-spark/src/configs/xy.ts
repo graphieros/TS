@@ -75,6 +75,7 @@ export const config_sparkline: ConfigXY = {
     tooltip_box_shadow: '0 0 12px -6px rgba(0,0,0,0.3)',
     tooltip_max_width: 255,
     tooltip_custom: null,
+    tooltip_marker_size: 14,
 
     // LINE SETTINGS
     line_smooth: false,
@@ -110,6 +111,7 @@ export const config_sparkline: ConfigXY = {
     legend_background: "#FFFFFF",
     legend_color: "#1A1A1A",
     legend_font_size: 14,
+    legend_marker_size: 14,
 
     // TITLE SETTINGS
     title_show: true,

@@ -3,7 +3,7 @@ import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
 import { calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTitle, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
 import * as detector from "../utils/chartDetector"
-import { ChartTitle } from "../../types/common";
+import { ChartLegend, ChartTitle } from "../../types/common";
 
 export default function Sparkline({
     container,
@@ -44,7 +44,7 @@ export default function Sparkline({
         userConfig: config ?? {}
     });
 
-    const LEGEND = createLegend(finalConfig);
+    const LEGEND = createLegend(finalConfig satisfies ChartLegend);
     let TITLE: any;
     let segregated: string[] = [];
     let bars = 0;
@@ -96,8 +96,8 @@ export default function Sparkline({
                 selectedDatapoints.forEach(p => {
                     html += `
                         <div class="${CssClass.CHART_TOOLTIP_CONTENT}" style="display: flex; flex-direction: row; align-items: center; gap: 4px; margin: 8px 0">
-                            <div class="${CssClass.CHART_TOOLTIP_MARKER}" style="width:12px; display: flex; align-items:center">
-                                <svg height="12" width="12" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="${p.color}"/></svg>
+                            <div class="${CssClass.CHART_TOOLTIP_MARKER}" style="width:${finalConfig.tooltip_marker_size}px; display: flex; align-items:center">
+                                <svg height="${finalConfig.tooltip_marker_size}" width="${finalConfig.tooltip_marker_size}" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="${p.color}"/></svg>
                             </div>
                             <div class="${CssClass.CHART_TOOLTIP_NAME_VALUE}">
                                 <span>${p.name} : </span>
@@ -177,26 +177,18 @@ export default function Sparkline({
 
         if (detector.isSimpleArrayOfNumbers(finalDataset.usableDataset)) {
 
-            if (finalConfig.series_stacked) {
-                console.warn(`\n\nConfig incompatibility:\n\nThe config attribute "series_stacked" must be set to false when using a dataset that is a simple array of numbers.\n\n`);
-            }
+            console.warn(`XY chart dataset datastructure is incorrect. Please provide dataset as an array of objects of shape:
 
-            const plots = finalDataset.usableDataset.map((ds: number, i: number) => {
-                return {
-                    x: drawingArea.left! + (i * slot) + (slot / 2),
-                    y: drawingArea.bottom! - (((ds + Math.abs(scale.min)) / (scale.max + Math.abs(scale.min))) * drawingArea.height!),
-                    absoluteIndex: i
-                }
-            });
-
-            mutableDataset = [
-                {
-                    plots,
-                    path: finalConfig.line_smooth ? createSmoothPath(plots, finalConfig.line_smooth_force) : plots.map((p: Coordinate) => `${p.x},${p.y} `).toString().trim(),
-                    color: palette[0]
-                }
-            ] as SerieXY[];
-
+[
+    {
+        type: 'bar' | 'line'
+        name: string,
+        values: number[]
+    },
+    {...}
+]
+            `)
+            
         } else {
 
             let height_position = 0;
@@ -608,7 +600,6 @@ export default function Sparkline({
                     bar.classList.add(CssClass.CHART_BAR);
                 });
             } else {
-                console.log('WUT', bars, k)
                 ds.plots.forEach((plot, i) => {
                     const bar = createShape({
                         shape: Shape.RECT,
@@ -898,7 +889,7 @@ export default function Sparkline({
                 LEGEND_ITEM.setAttribute('style', 'display: flex; flex-direction: row; gap: 4px; align-items:center; justify-content:center;');
                 let html = "";
 
-                html += `<div style="width:14px; display:flex; align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle cx="5" cy="5" r="5" fill="${ds.color}"/></svg></div>`;
+                html += `<div style="width:${finalConfig.legend_marker_size}px; display:flex; align-items:center;"><svg viewBox="0 0 12 12" height="${finalConfig.legend_marker_size}" width="${finalConfig.legend_marker_size}"><circle cx="5" cy="5" r="5" fill="${ds.color}"/></svg></div>`;
                 html += `<span>${ds.name}</span>`;
 
                 LEGEND_ITEM.innerHTML = html;

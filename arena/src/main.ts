@@ -5,11 +5,20 @@ const app = document.getElementById('container');
 // const dataset = [1, 2, 3, 4]
 const dataset = [
   {
-    type: "line",
+    type: "bar",
     name: "Serie 1",
     values: [-34, -21, -13, -8, -5, -3, -2, -1, 0, 1, 2, 3, 5, 8, 13, 21, 34],
-    datapoint_height_ratio: 0.6,
+    datapoint_height_ratio: 0.4,
     datapoint_scale_ticks: 3,
+    datapoint_line_show_area: true,
+    datapoint_line_smooth: true,
+  },
+  {
+    type: "line",
+    name: "Serie 1",
+    values: [34, 21, 13, 8, 5, 3, 2, 1, 0, -1, -2, -3, -5, -8, -13, -21, -34],
+    datapoint_scale_ticks: 3,
+    datapoint_height_ratio: 0.4,
     datapoint_line_show_area: true,
     datapoint_line_smooth: true,
   },
@@ -39,13 +48,13 @@ const config: ConfigXY = {
   line_smooth: true,
   line_smooth_force: 0.15,
   tooltip_show: true,
-  series_stacked: false,
+  series_stacked: true,
   grid_axis_y_name: 'Strength',
   grid_axis_x_name: 'Time flies',
   grid_lines_y_stroke_opacity: 0.1,
   title_text: 'Title',
   subtitle_text: 'Subtitle',
-  title_align: 'center'
+  title_align: 'center',
   // label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'],
   // tooltip_custom: ({ index, series, period} : {index: number, series: any, period: string}) => {
   //     console.log(index, series, period)

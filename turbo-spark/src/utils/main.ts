@@ -489,6 +489,7 @@ export function createTooltip(id: string) {
     TOOLTIP.style.left = '-10';
     TOOLTIP.style.display = 'none';
     TOOLTIP.style.color = "black"; // TEMP
+    TOOLTIP.classList.add(CssClass.CHART_TOOLTIP);
     document.body.appendChild(TOOLTIP)
     return TOOLTIP as HTMLElement;
 }
@@ -519,13 +520,13 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition }: { toolti
     }
 }
 
-export function createLegend<C>(config: C) : HTMLDivElement {
+export function createLegend(config: ChartLegend) : HTMLDivElement {
     const legend = document.createElement(Element.DIV);
     legend.style.width = '100%';
     legend.style.padding = '12px 0';
-    legend.style.background = (config as ChartLegend).legend_background!;
-    legend.style.color = (config as ChartLegend).legend_color!;
-    legend.style.fontSize = (config as ChartLegend).legend_font_size + 'px';
+    legend.style.background = config.legend_background!;
+    legend.style.color = config.legend_color!;
+    legend.style.fontSize = config.legend_font_size + 'px';
     legend.style.userSelect = 'none';
     legend.style.cursor = 'pointer';
     return legend;
