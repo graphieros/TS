@@ -96,6 +96,10 @@ function toggleStack() {
   chart.config.series_stacked = !chart.config.series_stacked;
 }
 
+function toggleTable() {
+  chart.config.table_show = !chart.config.table_show;
+}
+
 const buttonDataset = document.getElementById('addDataset')
 buttonDataset?.addEventListener('click', incrementDataset)
 
@@ -104,5 +108,8 @@ buttonConfig?.addEventListener('click', changeConfig)
 
 const buttonStack = document.getElementById('changeStack');
 buttonStack?.addEventListener('click', toggleStack)
+
+const buttonTable = document.getElementById('toggleTable');
+buttonTable?.addEventListener('click', toggleTable)
 
 

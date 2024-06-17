@@ -51,9 +51,12 @@ export default function Sparkline({
 
     const PALETTE = finalConfig.chart_custom_palette!.length ? finalConfig.chart_custom_palette : palette;
 
+    const TABLE_WRAPPER = document.createElement(Element.DIV);
+
     function resetChart() {
         SVG.innerHTML = "";
         LEGEND.innerHTML = "";
+        TABLE_WRAPPER.innerHTML = "";
         TITLE = "";
         SVG_ELEMENTS.plots = [];
         SVG_ELEMENTS.selectors = [];
@@ -966,11 +969,13 @@ export default function Sparkline({
             table.appendChild(tbody);
             details.appendChild(summary);
             details.appendChild(table);
-            container.appendChild(details);
+            TABLE_WRAPPER.appendChild(details)
         }
 
+        finalConfig.table_show && createTable();
+        
         // FIRST LOAD
-
+        
         if (init) {
             if (finalConfig.title_show) {
                 container.appendChild(TITLE);
@@ -979,9 +984,9 @@ export default function Sparkline({
             if (finalConfig.legend_show) {
                 container.appendChild(LEGEND);
             }
-
+            
             if (finalConfig.table_show) {
-                createTable();
+                container.appendChild(TABLE_WRAPPER);
             }
 
             SVG.addEventListener('mousemove', (e) => {
