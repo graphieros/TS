@@ -382,8 +382,8 @@ export default function Sparkline({
                 const label = createShape({
                     shape: Shape.TEXT,
                     config: {
-                        x: drawingArea.left! + (slot * i) + (slot / 2) + finalConfig.label_axis_x_offset_x!,
-                        y: drawingArea.bottom + (finalConfig.label_axis_x_font_size! * 1.5) + finalConfig.label_axis_x_offset_y!,
+                        // x: drawingArea.left! + (slot * i) + (slot / 2) + finalConfig.label_axis_x_offset_x!,
+                        // y: drawingArea.bottom + (finalConfig.label_axis_x_font_size! * 1.5) + finalConfig.label_axis_x_offset_y!,
                         fill: finalConfig.label_axis_x_color,
                         'font-size': finalConfig.label_axis_x_font_size,
                         'font-weight': finalConfig.label_axis_x_bold ? 'bold' : 'normal',
@@ -391,7 +391,8 @@ export default function Sparkline({
                     },
                     parent: SVG
                 });
-                label.innerHTML = finalConfig.label_axis_x_values![i] ?? i
+                label.innerHTML = finalConfig.label_axis_x_values![i] ?? i;
+                label.setAttribute('transform', `translate(${drawingArea.left! + (slot * i) + (slot / 2) + finalConfig.label_axis_x_offset_x!}, ${drawingArea.bottom + (finalConfig.label_axis_x_font_size! * 1.5) + finalConfig.label_axis_x_offset_y!}), rotate(${finalConfig.label_axis_x_rotation})`)
             }
         }
 

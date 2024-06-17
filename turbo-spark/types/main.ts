@@ -58,6 +58,7 @@ export type ConfigXY = ChartLegend & ChartTooltip & ChartTitle & {
     label_prefix?: string
     label_suffix?: string
     label_axis_x_values?: string[]
+    label_axis_x_rotation?: number
     label_axis_x_bold?: boolean
     label_axis_x_color?: string,
     label_axis_x_font_size?: number

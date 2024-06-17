@@ -55,6 +55,7 @@ export const config_sparkline: ConfigXY = {
     label_axis_x_show: true,
     label_axis_x_offset_x: 0,
     label_axis_x_offset_y: 0,
+    label_axis_x_rotation: 0,
 
     // DATA LABEL SETTINGS
     datalabel_show: true,

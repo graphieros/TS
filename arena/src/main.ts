@@ -58,8 +58,9 @@ const config: ConfigXY = {
   title_align: 'center',
   plot_radius: 2,
   plot_focus_radius: 3,
+  // label_axis_x_rotation: -30,
   // chart_custom_palette: ['red', 'green', 'blue', 'orange']
-  // label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'],
+  label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR', 'APR', 'MAY'],
   // tooltip_custom: ({ index, series, period} : {index: number, series: any, period: string}) => {
   //     console.log(index, series, period)
   //     return String(period)
