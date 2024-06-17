@@ -12,6 +12,7 @@ export const config_sparkline: ConfigXY = {
     chart_area_background_show: true,
     chart_area_background: "#1A1A1A",
     chart_area_background_opacity: 0.01,
+    chart_custom_palette: [],
 
     // GRID SETTINGS
     grid_axis_x_name: '',

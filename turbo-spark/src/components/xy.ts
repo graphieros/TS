@@ -49,6 +49,8 @@ export default function Sparkline({
     let segregated: string[] = [];
     let bars = 0;
 
+    const PALETTE = finalConfig.chart_custom_palette!.length ? finalConfig.chart_custom_palette : palette;
+
     function resetChart() {
         SVG.innerHTML = "";
         LEGEND.innerHTML = "";
@@ -198,7 +200,7 @@ export default function Sparkline({
                     ...ds,
                     type: ds.type ?? SerieXYType.LINE,
                     id: `xy_serie_${k}`,
-                    color: ds.color ? convertColorToHex(ds.color) : palette[k] || palette[k % palette.length]
+                    color: ds.color ? convertColorToHex(ds.color) : PALETTE![k] || PALETTE![k % PALETTE!.length]
                 }
             }) as SerieXY[];
 
@@ -593,7 +595,7 @@ export default function Sparkline({
                             y: ds.VALUES[i] >= 0 ? plot.y : ds.zero_position,
                             height: plot.plot_height,
                             width: slot - (slot * finalConfig.bar_group_gap_proportion!),
-                            fill: ds.color + '66'
+                            fill: ds.color
                         },
                         parent: SVG
                     });
@@ -608,7 +610,7 @@ export default function Sparkline({
                             y: ds.VALUES[i] >= 0 ? plot.y : ds.zero_position,
                             height: plot.plot_height,
                             width: (slot - finalConfig.bar_group_gap_proportion! * slot) / bars,
-                            fill: ds.color + '66',
+                            fill: ds.color,
                             stroke: finalConfig.bar_stroke,
                             'stroke-width': finalConfig.bar_stroke_width,
                             rx: finalConfig.bar_border_radius

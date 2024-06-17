@@ -22,6 +22,7 @@ export type ConfigXY = ChartLegend & ChartTooltip & ChartTitle & {
     chart_area_background_show?: boolean
     chart_area_background?: string
     chart_area_background_opacity?: number
+    chart_custom_palette?: string[]
 
     // GRID SETTINGS
     grid_axis_x_name?: string

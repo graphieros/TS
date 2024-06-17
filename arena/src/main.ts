@@ -6,8 +6,8 @@ const app = document.getElementById('container');
 const dataset = [
   {
     type: "bar",
-    name: "Serie 1",
-    values: [-34, -21, -13, -8, -5, -3, -2, -1, 0, 1, 2, 3, 5, 8, 13, 21, 34],
+    name: "Serie 0",
+    values: [-340, null, -130, -80, -50, -30, -20, -10, 0, 10, 20, 30, 50, 80, 130, 210, 340],
     datapoint_height_ratio: 0.4,
     datapoint_scale_ticks: 3,
     datapoint_line_show_area: true,
@@ -16,7 +16,7 @@ const dataset = [
   {
     type: "line",
     name: "Serie 1",
-    values: [34, 21, 13, 8, 5, 3, 2, 1, 0, -1, -2, -3, -5, -8, -13, -21, -34],
+    values: [34, null, 13, 8, 5, 3, 2, 1, 0, -1, -2, -3, -5, -8, -13, -21, -34],
     datapoint_scale_ticks: 3,
     datapoint_height_ratio: 0.4,
     datapoint_line_show_area: true,
@@ -49,12 +49,16 @@ const config: ConfigXY = {
   line_smooth_force: 0.15,
   tooltip_show: true,
   series_stacked: true,
+  // series_stack_gap: 10,
   grid_axis_y_name: 'Strength',
   grid_axis_x_name: 'Time flies',
   grid_lines_y_stroke_opacity: 0.1,
   title_text: 'Title',
   subtitle_text: 'Subtitle',
   title_align: 'center',
+  plot_radius: 2,
+  plot_focus_radius: 3,
+  // chart_custom_palette: ['red', 'green', 'blue', 'orange']
   // label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'],
   // tooltip_custom: ({ index, series, period} : {index: number, series: any, period: string}) => {
   //     console.log(index, series, period)
