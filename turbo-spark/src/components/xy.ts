@@ -908,6 +908,67 @@ export default function Sparkline({
             LEGEND.appendChild(LEGEND_WRAPPER);
         }
 
+        function createTable() {
+            const details = document.createElement(Element.DETAILS);
+            details.classList.add(CssClass.CHART_TABLE_DETAILS);
+            details.setAttribute('style', `background:${finalConfig.table_background};color:${finalConfig.table_color}`);
+
+            const summary = document.createElement(Element.SUMMARY);
+            summary.classList.add(CssClass.CHART_TABLE_SUMMARY);
+            summary.innerHTML = finalConfig.table_details_title!;
+            summary.setAttribute('style', 'cursor: pointer; user-select: none;')
+
+            const table = document.createElement(Element.TABLE);
+            table.classList.add(CssClass.CHART_TABLE);
+            table.setAttribute('style', 'border-collapse: none; width: 100%;')
+
+            const caption = document.createElement(Element.CAPTION);
+            caption.classList.add(CssClass.CHART_TABLE_CAPTION);
+            const thead = document.createElement(Element.THEAD);
+            const thead_tr = document.createElement(Element.TR);
+            const tbody = document.createElement(Element.TBODY);
+
+            caption.innerHTML = finalConfig.table_caption!;
+
+            const head_content = [
+                "Period",
+                ...mutableDataset.map(ds => ds.name),
+            ];
+
+            head_content.forEach(hc => {
+                const th = document.createElement(Element.TH);
+                th.classList.add(CssClass.CHART_TABLE_TH);
+                th.innerHTML = hc;
+                thead_tr.appendChild(th);
+            });
+
+            for(let i = 0; i < finalDataset.maxSeriesLength; i += 1) {
+                const body_tr = document.createElement(Element.TR);
+                body_tr.classList.add(CssClass.CHART_TABLE_TR);
+                const body_td_first = document.createElement(Element.TD);
+                body_td_first.classList.add(CssClass.CHART_TABLE_TD_FIRST);
+                body_td_first.innerHTML = finalConfig.label_axis_x_values![i] ?? i;
+
+                body_tr.appendChild(body_td_first);
+
+                mutableDataset.forEach(ds => {
+                    const body_td = document.createElement(Element.TD);
+                    body_td.innerHTML = ds.VALUES[i] === undefined ? '-' :  String(ds.VALUES![i]);
+                    body_td.classList.add(CssClass.CHART_TABLE_TD);
+                    body_tr.appendChild(body_td);
+                })
+                tbody.appendChild(body_tr);
+            }
+
+            thead.appendChild(thead_tr);
+            table.appendChild(caption);
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            details.appendChild(summary);
+            details.appendChild(table);
+            container.appendChild(details);
+        }
+
         // FIRST LOAD
 
         if (init) {
@@ -917,6 +978,10 @@ export default function Sparkline({
             container.appendChild(SVG);
             if (finalConfig.legend_show) {
                 container.appendChild(LEGEND);
+            }
+
+            if (finalConfig.table_show) {
+                createTable();
             }
 
             SVG.addEventListener('mousemove', (e) => {

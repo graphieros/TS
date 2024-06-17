@@ -1,4 +1,4 @@
-import { ChartLegend, ChartTitle, ChartTooltip } from "./common";
+import { ChartLegend, ChartTable, ChartTitle, ChartTooltip } from "./common";
 
 export type UnknownObject = {
     [key: string]: any
@@ -10,7 +10,11 @@ export type ProxyHandler = {
     }, property: string | number, newValue: any): boolean;
 }
 
-export type ConfigXY = ChartLegend & ChartTooltip & ChartTitle & {
+export type ConfigXY = 
+    ChartLegend & 
+    ChartTooltip & 
+    ChartTitle & 
+    ChartTable & {
     // CHART SETTINGS
     chart_height?: number
     chart_width?: number
@@ -166,6 +170,15 @@ export enum Element {
     DIV = 'div',
     SPAN = 'span',
     HR = 'hr',
+    DETAILS = 'details',
+    SUMMARY = 'summary',
+    TABLE = 'table',
+    THEAD = 'thead',
+    TBODY = 'tbody',
+    TH = 'th',
+    TD = 'td',
+    TR = 'tr',
+    CAPTION = 'caption'
 }
 
 export type ShapeConfig = {
@@ -243,7 +256,15 @@ export enum CssClass {
     CHART_LINE_SHEATHED = "chart-line__sheathed",
     CHART_LINE_AREA = "chart-line__area",
     CHART_BAR = "chart-bar",
-    CHART_TITLE = "chart-title"
+    CHART_TITLE = "chart-title",
+    CHART_TABLE_DETAILS = "chart-table__details",
+    CHART_TABLE_SUMMARY = "chart-table__summary",
+    CHART_TABLE_CAPTION = "chart-table__caption",
+    CHART_TABLE = "chart-table",
+    CHART_TABLE_TH = "chart-table__th",
+    CHART_TABLE_TD = "chart-table__td",
+    CHART_TABLE_TD_FIRST = "chart-table__td__first",
+    CHART_TABLE_TR = "chart-table__tr",
 }
 
 export enum ChartClass {

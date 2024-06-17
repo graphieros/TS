@@ -58,6 +58,10 @@ const config: ConfigXY = {
   title_align: 'center',
   plot_radius: 2,
   plot_focus_radius: 3,
+  table_show: true,
+  table_caption: "Table caption",
+  table_font_size: 14,
+  table_details_title: "Data table",
   // label_axis_x_rotation: -30,
   // chart_custom_palette: ['red', 'green', 'blue', 'orange']
   label_axis_x_values: ['JAN', 'FEV', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR', 'APR', 'MAY'],

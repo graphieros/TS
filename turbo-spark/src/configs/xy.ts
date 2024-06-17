@@ -126,5 +126,13 @@ export const config_sparkline: ConfigXY = {
     subtitle_text: "",
     subtitle_color: "#8A8A8A",
     subtitle_font_size: 16,
-    subtitle_bold: false
+    subtitle_bold: false,
+
+    // TABLE SETTINGS
+    table_details_title: "",
+    table_background: '#FFFFFF',
+    table_color: '#1A1A1A',
+    table_show: false,
+    table_caption: "",
+    table_font_size: 14
 }

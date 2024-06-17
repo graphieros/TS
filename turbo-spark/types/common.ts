@@ -36,3 +36,12 @@ export type ChartTitle = {
     subtitle_font_size?: number
     subtitle_bold?: boolean
 }
+
+export type ChartTable = {
+    table_details_title?: string
+    table_background?: string
+    table_color?: string
+    table_show?: boolean
+    table_caption?: string
+    table_font_size?: number
+}
