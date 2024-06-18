@@ -442,8 +442,8 @@ export function niceNum(range: number, round: boolean): number {
 export function calculateNiceScale(minValue: number, maxValue: number, maxTicks: number, rough = false): Scale {
     const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
     const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
-    const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
-    const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
+    let niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
+    let niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
 
     const ticks = [];
     for (let tick = niceMin; tick <= niceMax; tick += tickSpacing) {
@@ -451,10 +451,10 @@ export function calculateNiceScale(minValue: number, maxValue: number, maxTicks:
     }
 
     return {
-        min: niceMin,
-        max: niceMax,
-        tickSize: tickSpacing,
-        ticks
+        min: isNaN(niceMin) ? 0 : niceMin,
+        max: isNaN(niceMax) ? 1 : niceMax,
+        tickSize: tickSpacing ?? 1,
+        ticks: ticks.length ? ticks : [1, 0]
     };
 }
 

@@ -242,7 +242,7 @@ export default function Sparkline({
                 ...ds,
                 values: ds.values.slice(Math.min(zoom.start, zoom.end), Math.max(zoom.start, zoom.end))
             }
-        }) : dataset), segregated);
+        }).filter(ds => ds.values.length) : dataset), segregated);
 
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
 
@@ -966,11 +966,12 @@ export default function Sparkline({
                 setTooltipVisibility(true);
                 resetZoomer()
                 resetChart()
+                resetZoom()
             })
-            trap.addEventListener('dblclick', () => {
-                resetZoom();
-                resetChart()
-            })
+            // trap.addEventListener('dblclick', () => {
+            //     resetZoomer();
+            //     resetChart()
+            // })
         }
 
         // LEGEND
