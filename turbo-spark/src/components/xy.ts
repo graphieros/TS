@@ -46,6 +46,7 @@ export default function Sparkline({
         defaultConfig: config_sparkline,
         userConfig: config ?? {}
     });
+    let isTableOpen = false;
 
     const drawingArea = {
         left: finalConfig.chart_padding_left,
@@ -121,6 +122,7 @@ export default function Sparkline({
     }
 
     const zoom: ChartZoom = {
+        isZoomed: false,
         active: false,
         start: 0,
         end: 0,
@@ -129,13 +131,17 @@ export default function Sparkline({
         memoryEnd: 0,
     };
 
-    function resetZoom() {
+    async function resetZoom() {
         zoom.memoryStart = zoom.start;
         zoom.memoryEnd = zoom.end;
         zoom.active = false;
         zoom.start = 0;
         zoom.end = 0;
         zoom.absoluteStart = null;
+        if (!zoom.isZoomed) {
+            zoom.memoryStart = 0;
+            zoom.memoryEnd = 0;
+        }
     }
 
     function hoverDatapoint(index: number) {
@@ -183,6 +189,8 @@ export default function Sparkline({
                     } else {
                         period = finalConfig.label_axis_x_values![index] ?? null
                     }
+
+                    console.log(period)
     
                 if (period) {
                     html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${period}</div>`
@@ -962,7 +970,12 @@ export default function Sparkline({
                 },
             });
 
-            trap.style.cursor = 'crosshair';
+            if (zoom.isZoomed) {
+                trap.style.cursor = 'zoom-out';
+            } else {
+                trap.style.cursor = 'crosshair';
+            }
+
 
             SVG.appendChild(trap);
             trap.addEventListener('mouseenter', () => hoverDatapoint(i));
@@ -974,22 +987,27 @@ export default function Sparkline({
                 isMouseDown = true;
             });
             trap.addEventListener('mousemove', () => {
-                if(isMouseDown) {
+                if(isMouseDown && !zoom.isZoomed) {
                     setTooltipVisibility(false);
-                    zoom.end = i + 1;
-                    if (zoom.start > zoom.end) {
-                        zoom.start = zoom.absoluteStart!;
-                        zoom.end = i
+                    if (i === zoom.start) {
+                        return 
+                    } else {
+                        zoom.end = i + 1;
+                        if (zoom.start > zoom.end) {
+                            zoom.start = zoom.absoluteStart!;
+                            zoom.end = i
+                        }
+                        setZoomer(finalDataset);
                     }
-                    setZoomer(finalDataset);
                 }
             })
-            trap.addEventListener('mouseup', () => {
+            trap.addEventListener('mouseup', async () => {
+                zoom.isZoomed = !zoom.isZoomed;
                 isMouseDown = false;
                 setTooltipVisibility(true);
-                resetZoomer()
-                resetChart()
-                resetZoom()
+                resetZoomer();
+                resetChart();
+                await resetZoom();
             })
         }
 
@@ -1034,10 +1052,20 @@ export default function Sparkline({
             details.classList.add(CssClass.CHART_TABLE_DETAILS);
             details.setAttribute('style', `background:${finalConfig.table_background};color:${finalConfig.table_color}`);
 
+            if (isTableOpen) {
+                details.setAttribute('open', 'true')
+            } else {
+                details.removeAttribute('open')
+            }
+
             const summary = document.createElement(Element.SUMMARY);
             summary.classList.add(CssClass.CHART_TABLE_SUMMARY);
             summary.innerHTML = finalConfig.table_details_title!;
             summary.setAttribute('style', 'cursor: pointer; user-select: none;')
+
+            summary.addEventListener('click', () => {
+                isTableOpen = !isTableOpen;
+            })
 
             const table = document.createElement(Element.TABLE);
             table.classList.add(CssClass.CHART_TABLE);

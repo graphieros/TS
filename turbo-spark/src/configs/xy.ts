@@ -138,7 +138,7 @@ export const config_sparkline: ConfigXY = {
 
     // ZOOM SETTINGS
     zoom_background: "#91edc2",
-    zoom_stroke: "#3c996d",
-    zoom_stroke_width: 2,
+    zoom_stroke: "#40c98a",
+    zoom_stroke_width: 1,
     zoom_opacity: 0.2
 }

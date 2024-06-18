@@ -3,41 +3,55 @@ import { XY, type ConfigXY, type ChartXY } from "../node_modules/turbo-spark/dis
 const app = document.getElementById('container');
 
 // const dataset = [1, 2, 3, 4]
+
+let ds1 = [];
+let ds2 = [];
+let ds3 = [];
+let ds4 = [];
+for(let i = 0; i < 12; i += 1) {
+  ds1.push(Math.round(Math.random() * 1000));
+  ds2.push(Math.round(Math.random() * 100));
+  ds3.push(Math.round(Math.random() * 1));
+  ds4.push(Math.round(Math.random() * 1));
+}
+
 const dataset = [
   {
-    type: "bar",
+    type: "line",
     name: "Serie 0",
-    values: [-340, null, -130, -80, -50, -30, -20, -10, 0, 10, 20, 30, 50, 80, 130, 210, 340],
+    values: ds1,
     datapoint_height_ratio: 0.4,
     datapoint_scale_ticks: 3,
     datapoint_line_show_area: true,
-    datapoint_line_smooth: true,
+    datapoint_line_smooth: false,
+    datapoint_datalabel_show: false
   },
   {
     type: "line",
     name: "Serie 1",
-    values: [34, null, 13, 8, 5, 3, 2, 1, 0, -1, -2, -3, -5, -8, -13, -21, -34],
+    values: ds2,
     datapoint_scale_ticks: 3,
     datapoint_height_ratio: 0.4,
     datapoint_line_show_area: true,
-    datapoint_line_smooth: true,
+    datapoint_line_smooth: false,
+    datapoint_datalabel_show: false
   },
   {
     type: "line",
     name: "Serie 2",
-    values: [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
+    values: ds3,
     datapoint_scale_ticks: 2,
     datapoint_line_smooth: false,
-    datapoint_datalabel_show: true,
+    datapoint_datalabel_show: false,
     datapoint_line_show_area: true
   },
   {
     type: "line",
     name: "Serie 3",
-    values: [1, 0, 0, 0, 1, 1, 0, 0, 0, 1],
+    values: ds4,
     datapoint_scale_ticks: 2,
     datapoint_line_smooth: false,
-    datapoint_datalabel_show: true,
+    datapoint_datalabel_show: false,
     datapoint_line_show_area: true
   },
 ]
@@ -56,7 +70,7 @@ const config: ConfigXY = {
   title_text: 'Title',
   subtitle_text: 'Subtitle',
   title_align: 'center',
-  plot_radius: 2,
+  plot_radius: 0,
   plot_focus_radius: 3,
   table_show: true,
   table_caption: "Table caption",
