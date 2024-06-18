@@ -124,10 +124,14 @@ export default function Sparkline({
         active: false,
         start: 0,
         end: 0,
-        absoluteStart: null
+        absoluteStart: null,
+        memoryStart: 0,
+        memoryEnd: 0,
     };
 
     function resetZoom() {
+        zoom.memoryStart = zoom.start;
+        zoom.memoryEnd = zoom.end;
         zoom.active = false;
         zoom.start = 0;
         zoom.end = 0;
@@ -153,10 +157,18 @@ export default function Sparkline({
                     index,
                     series: selectedDatapoints
                 }) === 'string') {
+
+                    let period = ""
+                    if (Math.abs(zoom.memoryEnd - zoom.memoryStart) > 0) {
+                        period = finalConfig.label_axis_x_values!.slice(Math.min(zoom.memoryStart, zoom.memoryEnd), Math.max(zoom.memoryStart, zoom.memoryEnd))[index] ?? null
+                    } else {
+                        period = finalConfig.label_axis_x_values![index] ?? null
+                    }
+
                     tooltipContent = finalConfig.tooltip_custom({
                         index,
                         series: selectedDatapoints,
-                        period: finalConfig.label_axis_x_values![index] ?? null
+                        period,
                     });
                 } else {
                     console.warn('\n\nInvalid custom_tooltip return type:\n\ncustom_tooltip config attriute must return a string\n\n')
@@ -164,9 +176,16 @@ export default function Sparkline({
     
             } else {
                 let html = '';
+
+                let period = ""
+                    if (Math.abs(zoom.memoryEnd - zoom.memoryStart) > 0) {
+                        period = finalConfig.label_axis_x_values!.slice(Math.min(zoom.memoryStart, zoom.memoryEnd), Math.max(zoom.memoryStart, zoom.memoryEnd))[index] ?? null
+                    } else {
+                        period = finalConfig.label_axis_x_values![index] ?? null
+                    }
     
-                if (finalConfig.label_axis_x_values![index]) {
-                    html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${finalConfig.label_axis_x_values![index]}</div>`
+                if (period) {
+                    html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${period}</div>`
                 }
         
                 selectedDatapoints.forEach(p => {
@@ -463,7 +482,11 @@ export default function Sparkline({
                     },
                     parent: SVG
                 });
-                label.innerHTML = finalConfig.label_axis_x_values![i] ?? i;
+                if (zoom.active) {
+                    label.innerHTML = finalConfig.label_axis_x_values!.slice(Math.min(zoom.start, zoom.end), Math.max(zoom.start, zoom.end))[i] ?? i
+                } else {
+                    label.innerHTML = finalConfig.label_axis_x_values![i] ?? i;
+                }
                 label.setAttribute('transform', `translate(${drawingArea.left! + (slot * i) + (slot / 2) + finalConfig.label_axis_x_offset_x!}, ${drawingArea.bottom + (finalConfig.label_axis_x_font_size! * 1.5) + finalConfig.label_axis_x_offset_y!}), rotate(${finalConfig.label_axis_x_rotation})`)
             }
         }
@@ -968,10 +991,6 @@ export default function Sparkline({
                 resetChart()
                 resetZoom()
             })
-            // trap.addEventListener('dblclick', () => {
-            //     resetZoomer();
-            //     resetChart()
-            // })
         }
 
         // LEGEND
@@ -1049,7 +1068,13 @@ export default function Sparkline({
                 body_tr.classList.add(CssClass.CHART_TABLE_TR);
                 const body_td_first = document.createElement(Element.TD);
                 body_td_first.classList.add(CssClass.CHART_TABLE_TD_FIRST);
-                body_td_first.innerHTML = finalConfig.label_axis_x_values![i] ?? i;
+
+                if (zoom.active) {
+                    body_td_first.innerHTML = finalConfig.label_axis_x_values!.slice(Math.min(zoom.start, zoom.end), Math.max(zoom.start, zoom.end))[i] ?? i;
+                } else {
+                    body_td_first.innerHTML = finalConfig.label_axis_x_values![i] ?? i;
+                }
+
 
                 body_tr.appendChild(body_td_first);
 

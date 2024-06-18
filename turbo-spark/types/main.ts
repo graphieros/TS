@@ -284,4 +284,6 @@ export type ChartZoom = {
     start: number
     end: number
     absoluteStart: number | null
+    memoryStart: number
+    memoryEnd: number
 }
