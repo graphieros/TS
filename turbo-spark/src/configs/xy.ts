@@ -134,5 +134,11 @@ export const config_sparkline: ConfigXY = {
     table_color: '#1A1A1A',
     table_show: false,
     table_caption: "",
-    table_font_size: 14
+    table_font_size: 14,
+
+    // ZOOM SETTINGS
+    zoom_background: "#91edc2",
+    zoom_stroke: "#3c996d",
+    zoom_stroke_width: 2,
+    zoom_opacity: 0.2
 }

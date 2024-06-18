@@ -109,6 +109,12 @@ export type ConfigXY =
     series_stacked?: boolean
     series_stack_gap?: number
 
+    // ZOOM SETTINGS
+    zoom_background?: string
+    zoom_stroke?: string
+    zoom_stroke_width?: number
+    zoom_opacity?: number
+
     // TOOLTIP SETTINGS (common ChartTooltip)
     
     // LEGEND SETTINGS (common ChartLegend)
@@ -137,6 +143,7 @@ export type SerieXY = {
     type: SerieXYType
     name: string
     VALUES: number[]
+    values: number[]
     color?: string
     serie_height?: number
     height_position?: number
@@ -242,6 +249,7 @@ export type PlotCircle = {
 export type STACK_XY = {
     plots: PlotCircle[]
     selectors: SVGLineElement[]
+    zooms: SVGRectElement[]
 }
 
 export enum CssClass {
@@ -269,4 +277,11 @@ export enum CssClass {
 
 export enum ChartClass {
     XY = "chart-svg__xy"
+}
+
+export type ChartZoom = {
+    active: boolean
+    start: number
+    end: number
+    absoluteStart: number | null
 }

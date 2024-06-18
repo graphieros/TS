@@ -489,6 +489,7 @@ export function createTooltip(id: string) {
     TOOLTIP.style.left = '-10';
     TOOLTIP.style.display = 'none';
     TOOLTIP.style.color = "black"; // TEMP
+    TOOLTIP.style.userSelect = 'none';
     TOOLTIP.classList.add(CssClass.CHART_TOOLTIP);
     document.body.appendChild(TOOLTIP)
     return TOOLTIP as HTMLElement;

@@ -1,4 +1,4 @@
-import { Coordinate, ConfigXY, LineDataset, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element, CssClass, ChartClass, SerieXYType } from "../../types/main";
+import { Coordinate, ConfigXY, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element, CssClass, ChartClass, SerieXYType, ChartZoom } from "../../types/main";
 import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
 import { calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTitle, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
@@ -12,7 +12,7 @@ export default function Sparkline({
 }: {
     container: HTMLElement;
     config?: ConfigXY;
-    dataset: LineDataset;
+    dataset: SerieXY[];
 }) {
 
     // IDEAS
@@ -21,12 +21,15 @@ export default function Sparkline({
     const SVG = document.createElementNS(CONSTANT.XMLNS, "svg");
     SVG.classList.add(CssClass.CHART_SVG);
     SVG.classList.add(ChartClass.XY);
+    SVG.style.userSelect = 'none';
 
     const SVG_ELEMENTS: STACK_XY = {
         plots: [],
-        selectors: []
+        selectors: [],
+        zooms: []
     };
     const tooltipId = createUid();
+    const zoomerId = createUid();
     const tooltip = createTooltip(tooltipId);
     const clientPosition = {
         x: 0,
@@ -44,10 +47,63 @@ export default function Sparkline({
         userConfig: config ?? {}
     });
 
+    const drawingArea = {
+        left: finalConfig.chart_padding_left,
+        top: finalConfig.chart_padding_top,
+        right: finalConfig.chart_width! - finalConfig.chart_padding_right!,
+        bottom: finalConfig.chart_height! - finalConfig.chart_padding_bottom!,
+        width: finalConfig.chart_width! - finalConfig.chart_padding_left! - finalConfig.chart_padding_right!,
+        height: finalConfig.chart_height! - finalConfig.chart_padding_top! - finalConfig.chart_padding_bottom!
+    };
+
+    // ZOOMER
+    // FIXME: adapt config
+    const zoomer = createShape({
+        shape: Shape.RECT,
+        config: {
+            fill: finalConfig.zoom_background,
+            x: drawingArea.left,
+            y: drawingArea.top,
+            height: drawingArea.height,
+            width: 0,
+            stroke: 'none',
+        },
+        parent: SVG
+    })
+    zoomer.setAttribute('id', zoomerId);
+    zoomer.style.opacity = String(finalConfig.zoom_opacity);
+
+
+    function setZoomer(ds: any) {
+        const w = (Math.abs(zoom.end - zoom.start)) * (drawingArea.width / ds.maxSeriesLength)
+        const s = (Math.min(...[zoom.start, zoom.end])) * (drawingArea.width / ds.maxSeriesLength);
+        // FIXME: set stroke if w > 0;
+        if (w > 0) {
+            zoomer.setAttribute('stroke', finalConfig.zoom_stroke!);
+            zoom.active = true;
+        } else {
+            zoomer.setAttribute('stroke', 'none');
+            zoom.active = false;
+        }
+        zoomer.setAttribute('x', String(drawingArea.left! + s))
+        zoomer.setAttribute('width', String(w <= 0 ? 0 : w));
+    }
+
+    function resetZoomer() {
+        zoomer.setAttribute('stroke', 'none');
+        zoomer.setAttribute('width', '0');
+    }
+
+    function setTooltipVisibility(isVisible: boolean) {
+        tooltip.style.opacity = isVisible ? '1' : '0';
+    }
+
+
     const LEGEND = createLegend(finalConfig satisfies ChartLegend);
     let TITLE: any;
     let segregated: string[] = [];
     let bars = 0;
+    let isMouseDown = false;
 
     const PALETTE = finalConfig.chart_custom_palette!.length ? finalConfig.chart_custom_palette : palette;
 
@@ -60,7 +116,22 @@ export default function Sparkline({
         TITLE = "";
         SVG_ELEMENTS.plots = [];
         SVG_ELEMENTS.selectors = [];
+        SVG.prepend(zoomer);
         makeChart();
+    }
+
+    const zoom: ChartZoom = {
+        active: false,
+        start: 0,
+        end: 0,
+        absoluteStart: null
+    };
+
+    function resetZoom() {
+        zoom.active = false;
+        zoom.start = 0;
+        zoom.end = 0;
+        zoom.absoluteStart = null;
     }
 
     function hoverDatapoint(index: number) {
@@ -154,7 +225,7 @@ export default function Sparkline({
             s.setAttribute('stroke', 'transparent')
         });
     }
-
+    
     function makeChart() {
 
         TITLE = createTitle(finalConfig satisfies ChartTitle);
@@ -165,16 +236,13 @@ export default function Sparkline({
         SVG.style.width = "100%";
 
         // DRAWING AREA
-        const drawingArea = {
-            left: finalConfig.chart_padding_left,
-            top: finalConfig.chart_padding_top,
-            right: finalConfig.chart_width! - finalConfig.chart_padding_right!,
-            bottom: finalConfig.chart_height! - finalConfig.chart_padding_bottom!,
-            width: finalConfig.chart_width! - finalConfig.chart_padding_left! - finalConfig.chart_padding_right!,
-            height: finalConfig.chart_height! - finalConfig.chart_padding_top! - finalConfig.chart_padding_bottom!
-        };
 
-        finalDataset = detector.detectChart(dataset, segregated);
+        finalDataset = detector.detectChart((zoom.active ? dataset.map(ds => {
+            return {
+                ...ds,
+                values: ds.values.slice(Math.min(zoom.start, zoom.end), Math.max(zoom.start, zoom.end))
+            }
+        }) : dataset), segregated);
 
         const slot = drawingArea.width / finalDataset.maxSeriesLength;
 
@@ -288,6 +356,7 @@ export default function Sparkline({
         }
 
         const zeroPosition = drawingArea.bottom - ((Math.abs(scale.min) / (scale.max + Math.abs(scale.min))) * drawingArea.height);
+
 
         // GRID >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GRID //
 
@@ -870,9 +939,38 @@ export default function Sparkline({
                 },
             });
 
+            trap.style.cursor = 'crosshair';
+
             SVG.appendChild(trap);
             trap.addEventListener('mouseenter', () => hoverDatapoint(i));
             trap.addEventListener('mouseout', resetDatapoints);
+
+            trap.addEventListener('mousedown', () => {
+                zoom.start = i;
+                zoom.absoluteStart = i + 1;
+                isMouseDown = true;
+            });
+            trap.addEventListener('mousemove', () => {
+                if(isMouseDown) {
+                    setTooltipVisibility(false);
+                    zoom.end = i + 1;
+                    if (zoom.start > zoom.end) {
+                        zoom.start = zoom.absoluteStart!;
+                        zoom.end = i
+                    }
+                    setZoomer(finalDataset);
+                }
+            })
+            trap.addEventListener('mouseup', () => {
+                isMouseDown = false;
+                setTooltipVisibility(true);
+                resetZoomer()
+                resetChart()
+            })
+            trap.addEventListener('dblclick', () => {
+                resetZoom();
+                resetChart()
+            })
         }
 
         // LEGEND
