@@ -7,4 +7,4 @@ A super light and highly customizable TS chart library that can be included in a
 
 Examples:
 
-- ![use in Vanilla JS](https://jsfiddle.net/k7sy5qL2/1/)
+- [use in Vanilla JS](https://jsfiddle.net/k7sy5qL2/1/)
