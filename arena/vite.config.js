@@ -11,6 +11,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       external: [],  // Add any external dependencies you don't want to bundle
-    }
+    },
+    types: [
+      {
+        declarationDir: "dist/types",
+        root: resolve(__dirname, "types"),
+        entry: "main.ts",
+      },
+    ],
   }
 });
