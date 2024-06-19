@@ -75,6 +75,7 @@ const config: ConfigXY = {
   table_show: true,
   table_caption: "Table caption",
   table_font_size: 14,
+  label_axis_x_show: false,
   table_details_title: "Data table",
   // label_axis_x_rotation: -30,
   // chart_custom_palette: ['red', 'green', 'blue', 'orange']

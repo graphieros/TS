@@ -174,17 +174,12 @@ export default function Sparkline({
                     series: selectedDatapoints
                 }) === 'string') {
 
-                    let period = ""
-                    if (Math.abs(zoom.memoryEnd - zoom.memoryStart) > 0) {
-                        period = finalConfig.label_axis_x_values!.slice(Math.min(zoom.memoryStart, zoom.memoryEnd), Math.max(zoom.memoryStart, zoom.memoryEnd))[index] ?? null
-                    } else {
-                        period = finalConfig.label_axis_x_values![index] ?? null
-                    }
+                    const period = finalConfig.label_axis_x_values![zoom.isZoomed ? index + Math.min(zoom.memoryStart, zoom.memoryEnd) : index];
 
                     tooltipContent = finalConfig.tooltip_custom({
                         index,
                         series: selectedDatapoints,
-                        period,
+                        period: period ? period : zoom.isZoomed ? index + Math.min(zoom.memoryStart, zoom.memoryEnd) : index,
                     });
                 } else {
                     console.warn('\n\nInvalid custom_tooltip return type:\n\ncustom_tooltip config attriute must return a string\n\n')
@@ -195,7 +190,7 @@ export default function Sparkline({
 
                 const period = finalConfig.label_axis_x_values![zoom.isZoomed ? index + Math.min(zoom.memoryStart, zoom.memoryEnd) : index];
     
-                html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${period ?? index}</div>`
+                html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${period ? period : zoom.isZoomed ? index + Math.min(zoom.memoryStart, zoom.memoryEnd) : index }</div>`
         
                 selectedDatapoints.forEach(p => {
                     html += `
@@ -541,7 +536,7 @@ export default function Sparkline({
             const content = document.createElement(Element.DIV);
             const period = setPeriodLabel(zoom.isZoomed ? i + Math.min(zoom.start, zoom.end) : i);
 
-            content.innerHTML = period ? String(period) : String(i);
+            content.innerHTML = period ? String(period) : String(i + Math.min(zoom.start, zoom.end));
             content.style.color = finalConfig.period_highlighter_color!;
             content.style.width = "100%";
             content.style.textAlign = "center";
