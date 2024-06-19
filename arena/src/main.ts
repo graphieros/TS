@@ -20,7 +20,7 @@ const dataset = [
     type: "line",
     name: "Serie 0",
     values: ds1,
-    datapoint_height_ratio: 0.4,
+    // datapoint_height_ratio: 0.4,
     datapoint_scale_ticks: 3,
     datapoint_line_show_area: true,
     datapoint_line_smooth: false,
@@ -31,7 +31,7 @@ const dataset = [
     name: "Serie 1",
     values: ds2,
     datapoint_scale_ticks: 3,
-    datapoint_height_ratio: 0.4,
+    // datapoint_height_ratio: 0.4,
     datapoint_line_show_area: true,
     datapoint_line_smooth: false,
     datapoint_datalabel_show: false
