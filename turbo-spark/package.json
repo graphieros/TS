@@ -1,7 +1,7 @@
 {
   "name": "turbo-spark",
   "private": false,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "A super light and highly customizable TS chart library that can be included in any framework.",
   "keywords": [
@@ -21,7 +21,7 @@
   "auhor": "Alec Lloyd Probert",
   "repository": {
     "type": "git",
-    "url": "https://github.com/graphieros/TS/tree/main/turbo-spark"
+    "url": "https://github.com/graphieros/TS"
   },
   "license": "MIT",
   "files": [
