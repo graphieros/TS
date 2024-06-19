@@ -1,7 +1,7 @@
 {
   "name": "turbo-spark",
   "private": false,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "A super light and highly customizable TS chart library that can be included in any framework.",
   "keywords": [
@@ -29,11 +29,12 @@
   ],
   "main": "./dist/turbo-spark.cjs",
   "module": "./dist/turbo-spark.js",
+  "homepage": "https://turbo-spark.graphieros.com/",
   "exports": {
     ".": {
       "import": "./dist/turbo-spark.js",
       "require": "./dist/turbo-spark.cjs",
-      "types": "./dist/types/turbo-spark.d.ts"
+      "types": "./dist/types/main.ts"
     }
   },
   "scripts": {
