@@ -1,4 +1,4 @@
-import { Coordinate, ConfigXY, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element, CssClass, ChartClass, SerieXYType, ChartZoom } from "../../types/main";
+import { Coordinate, ConfigXY, Shape, ChartXY, STACK_XY, SerieXY, TooltipSerieContent, Element, CssClass, ChartClass, SerieXYType, ChartZoom, XMLNS } from "../../types/main";
 import { config_sparkline } from "../configs/xy";
 import { CONSTANT } from "../utils/constants";
 import { calcTooltipPosition, calculateHeightRatioAuto, calculateNiceScale, convertColorToHex, createLegend, createProxyObservable, createShape, createSmoothPath, createTitle, createTooltip, createUid, dataLabel, palette, useNestedProp } from "../utils/main";
@@ -26,7 +26,10 @@ export default function Sparkline({
     const SVG_ELEMENTS: STACK_XY = {
         plots: [],
         selectors: [],
-        zooms: []
+        zooms: [],
+        periodHighlighters: [],
+        periodHighlighterContents: [],
+        periodHighlighterTriangles: []
     };
     const tooltipId = createUid();
     const zoomerId = createUid();
@@ -117,6 +120,9 @@ export default function Sparkline({
         TITLE = "";
         SVG_ELEMENTS.plots = [];
         SVG_ELEMENTS.selectors = [];
+        SVG_ELEMENTS.periodHighlighters = [];
+        SVG_ELEMENTS.periodHighlighterContents = [];
+        SVG_ELEMENTS.periodHighlighterTriangles = [];
         SVG.prepend(zoomer);
         makeChart();
     }
@@ -142,6 +148,10 @@ export default function Sparkline({
             zoom.memoryStart = 0;
             zoom.memoryEnd = 0;
         }
+    }
+
+    function setPeriodLabel(index: number): string {
+        return finalConfig.label_axis_x_values![index] ?? null
     }
 
     function hoverDatapoint(index: number) {
@@ -183,18 +193,9 @@ export default function Sparkline({
             } else {
                 let html = '';
 
-                let period = ""
-                    if (Math.abs(zoom.memoryEnd - zoom.memoryStart) > 0) {
-                        period = finalConfig.label_axis_x_values!.slice(Math.min(zoom.memoryStart, zoom.memoryEnd), Math.max(zoom.memoryStart, zoom.memoryEnd))[index] ?? null
-                    } else {
-                        period = finalConfig.label_axis_x_values![index] ?? null
-                    }
-
-                    console.log(period)
+                const period = finalConfig.label_axis_x_values![zoom.isZoomed ? index + Math.min(zoom.memoryStart, zoom.memoryEnd) : index];
     
-                if (period) {
-                    html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${period}</div>`
-                }
+                html += `<div class="${CssClass.CHART_TOOLTIP_PERIOD}">${period ?? index}</div>`
         
                 selectedDatapoints.forEach(p => {
                     html += `
@@ -241,16 +242,39 @@ export default function Sparkline({
                 }
             });
         }
+        if (finalConfig.period_highlighter_show) {
+            SVG_ELEMENTS.periodHighlighters.forEach((highlighter, i: number) => {
+                if(index === i) {
+                    highlighter.style.display = 'initial';
+                } else {
+                    highlighter.style.display = 'none';
+                }
+            })
+
+            SVG_ELEMENTS.periodHighlighterTriangles.forEach((triangle, i: number) => {
+                if(index === i) {
+                    triangle.style.display = 'initial';
+                } else {
+                    triangle.style.display = 'none';
+                }
+            }) 
+        }
     }
 
     function resetDatapoints() {
         isTooltip = false;
         SVG_ELEMENTS.plots.forEach((p) => {
-            p.element.setAttribute('r', String(finalConfig.plot_radius))
+            p.element.setAttribute('r', String(finalConfig.plot_radius));
         });
         SVG_ELEMENTS.selectors.forEach((s) => {
-            s.setAttribute('stroke', 'transparent')
+            s.setAttribute('stroke', 'transparent');
         });
+        SVG_ELEMENTS.periodHighlighters.forEach((h) => {
+            h.style.display = 'none';
+        });
+        SVG_ELEMENTS.periodHighlighterTriangles.forEach((t) => {
+            t.style.display = 'none';
+        })
     }
     
     function makeChart() {
@@ -497,6 +521,53 @@ export default function Sparkline({
                 }
                 label.setAttribute('transform', `translate(${drawingArea.left! + (slot * i) + (slot / 2) + finalConfig.label_axis_x_offset_x!}, ${drawingArea.bottom + (finalConfig.label_axis_x_font_size! * 1.5) + finalConfig.label_axis_x_offset_y!}), rotate(${finalConfig.label_axis_x_rotation})`)
             }
+        }
+
+        // HIGHLIGHTERS
+        for(let i = 0; i < finalDataset.maxSeriesLength; i += 1) {
+            // TODO: add config
+            // TODO: add triangle
+            const y = drawingArea.bottom + finalConfig.period_highlighter_offset_y!;
+            const x = drawingArea.left! + (slot * i) + (slot / 2) - (finalConfig.period_highlighter_width! / 2);
+            const xTriangle = (drawingArea.left! + (slot * i) + (slot / 2));
+
+            const highlighter = document.createElementNS(XMLNS, 'foreignObject');
+            highlighter.setAttribute('x', String(x));
+            highlighter.setAttribute('y', String(y))
+            highlighter.setAttribute('width', String(finalConfig.period_highlighter_width));
+            highlighter.setAttribute('height', String(finalConfig.period_highlighter_height));
+            highlighter.style.display = 'none';
+            highlighter.style.overflow = 'visible';
+            const content = document.createElement(Element.DIV);
+            const period = setPeriodLabel(zoom.isZoomed ? i + Math.min(zoom.start, zoom.end) : i);
+
+            content.innerHTML = period ? String(period) : String(i);
+            content.style.color = finalConfig.period_highlighter_color!;
+            content.style.width = "100%";
+            content.style.textAlign = "center";
+            content.style.backgroundColor = finalConfig.period_highlighter_background!;
+            content.style.fontSize = finalConfig.period_highlighter_font_size + 'px';
+            content.style.boxShadow = finalConfig.period_highlighter_box_shadow!;
+            content.classList.add(CssClass.CHART_PERIOD_HIGHLIGHTER);
+
+            SVG_ELEMENTS.periodHighlighterContents.push(content);
+            SVG_ELEMENTS.periodHighlighters.push(highlighter);
+
+            const triangle = createShape({
+                shape: Shape.POLYGON,
+                config: {
+                    fill: finalConfig.period_highlighter_background,
+                    stroke: 'none',
+                    points: `${xTriangle - 3}, ${y},${xTriangle} ${y - 5} ${xTriangle + 3}, ${y}`
+                },
+                parent: SVG
+            })
+            triangle.style.display = 'none';
+
+            SVG_ELEMENTS.periodHighlighterTriangles.push(triangle as SVGPolygonElement);
+            
+            highlighter.appendChild(content);
+            SVG.appendChild(highlighter);
         }
 
         // SCALE LINES & LABELS
@@ -969,6 +1040,8 @@ export default function Sparkline({
                     fill: 'transparent'
                 },
             });
+
+            console.table(zoom)
 
             if (zoom.isZoomed) {
                 trap.style.cursor = 'zoom-out';

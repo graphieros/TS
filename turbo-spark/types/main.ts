@@ -4,6 +4,8 @@ export type UnknownObject = {
     [key: string]: any
 }
 
+export const XMLNS = "http://www.w3.org/2000/svg";
+
 export type ProxyHandler = {
     set(target: {
         [x: string]: any;
@@ -114,6 +116,16 @@ export type ConfigXY =
     zoom_stroke?: string
     zoom_stroke_width?: number
     zoom_opacity?: number
+
+    // PERIOD HIGHLIGHTER SETTINGS
+    period_highlighter_show?: boolean
+    period_highlighter_offset_y?: number
+    period_highlighter_font_size?: number
+    period_highlighter_background?: string
+    period_highlighter_color?: string
+    period_highlighter_width?: number
+    period_highlighter_height?: number
+    period_highlighter_box_shadow?: string
 
     // TOOLTIP SETTINGS (common ChartTooltip)
     
@@ -250,6 +262,9 @@ export type STACK_XY = {
     plots: PlotCircle[]
     selectors: SVGLineElement[]
     zooms: SVGRectElement[]
+    periodHighlighters: SVGForeignObjectElement[]
+    periodHighlighterContents: HTMLDivElement[]
+    periodHighlighterTriangles: SVGPolygonElement[]
 }
 
 export enum CssClass {
@@ -273,6 +288,7 @@ export enum CssClass {
     CHART_TABLE_TD = "chart-table__td",
     CHART_TABLE_TD_FIRST = "chart-table__td__first",
     CHART_TABLE_TR = "chart-table__tr",
+    CHART_PERIOD_HIGHLIGHTER = "chart-period-highlighter"
 }
 
 export enum ChartClass {

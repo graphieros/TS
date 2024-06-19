@@ -140,5 +140,15 @@ export const config_sparkline: ConfigXY = {
     zoom_background: "#91edc2",
     zoom_stroke: "#40c98a",
     zoom_stroke_width: 1,
-    zoom_opacity: 0.2
+    zoom_opacity: 0.2,
+
+    // PERIOD HIGHLIGHTER SETTINGS
+    period_highlighter_show: true,
+    period_highlighter_font_size: 10,
+    period_highlighter_offset_y: 6,
+    period_highlighter_background: "#e1e5e8",
+    period_highlighter_color: "#1A1A1A",
+    period_highlighter_width: 64,
+    period_highlighter_height: 18,
+    period_highlighter_box_shadow: '0 0 6px -3px rgba(0,0,0,0.3)'
 }
