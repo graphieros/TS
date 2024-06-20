@@ -1,7 +1,7 @@
 {
   "name": "turbo-spark",
   "private": false,
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "description": "A super light and highly customizable TS chart library that can be included in any framework.",
   "keywords": [
